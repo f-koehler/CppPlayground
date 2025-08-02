@@ -1,0 +1,1 @@
+add_executable(allocation_sizes allocation_sizes.cpp)
