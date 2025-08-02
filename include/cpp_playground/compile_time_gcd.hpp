@@ -1,4 +1,6 @@
-#pragma once
+#ifndef CPPPLAYGROUND_COMPILE_TIME_GCD_HPP
+#define CPPPLAYGROUND_COMPILE_TIME_GCD_HPP
+
 #include <cstdint>
 
 namespace CppPlayground {
@@ -31,3 +33,5 @@ static constexpr uint64_t compile_time_gcd_signed =
     Detail::handle_gcd_signs<a, b>();
 
 } // namespace CppPlayground
+
+#endif
