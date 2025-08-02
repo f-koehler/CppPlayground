@@ -1,0 +1,5 @@
+{
+  "name": "cpp-layground",
+  "version": "0.0.1",
+  "dependencies": ["catch2"]
+}
