@@ -9,12 +9,25 @@
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_BUILD_TYPE": "Debug"
       }
+    },
+    {
+      "name": "Release",
+      "binaryDir": "${sourceDir}/build/Release",
+      "generator": "Unix Makefiles",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_BUILD_TYPE": "Release"
+      }
     }
   ],
   "buildPresets": [
     {
       "name": "Debug",
       "configurePreset": "Debug"
+    },
+    {
+      "name": "Release",
+      "configurePreset": "Release"
     }
   ]
 }
