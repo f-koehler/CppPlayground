@@ -1,3 +1,4 @@
+#include "CLI/CLI.hpp"
 #include <CLI/CLI.hpp>
 #include <algorithm>
 #include <atomic>
@@ -7,6 +8,7 @@
 #include <cstdint>
 #include <future>
 #include <iterator>
+#include <limits>
 #include <memory>
 #include <ranges>
 #include <spdlog/spdlog.h>
@@ -24,7 +26,8 @@ int main(int argc, char **argv) {
   argv = app.ensure_utf8(argv);
 
   std::uint64_t num_threads = 4;
-  app.add_option("-n,--num-threads", num_threads, "Number of threads to race");
+  app.add_option("-n,--num-threads", num_threads, "Number of threads to race")
+      ->check(CLI::Range(uint64_t{1}, std::numeric_limits<uint64_t>::max()));
   CLI11_PARSE(app, argc, argv);
 
   std::atomic_uint64_t num_threads_ready{0};
