@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
                        .count();
                  });
   for (uint64_t i = 0; i < num_threads; ++i) {
-    spdlog::info("thread {}: {} ns", i, start_delay[i]);
+    spdlog::info("thread {}: {} ns", results[i].thread_id, start_delay[i]);
   }
 
   return 0;
