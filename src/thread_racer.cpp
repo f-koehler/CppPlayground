@@ -16,6 +16,7 @@
 struct Result {
   uint64_t thread_id;
   uint64_t time;
+  std::chrono::high_resolution_clock::time_point start_time;
 };
 
 int main(int argc, char **argv) {
@@ -50,7 +51,8 @@ int main(int argc, char **argv) {
     const auto stop = std::chrono::high_resolution_clock::now();
     promise.set_value(Result{
         thread_id,
-        static_cast<uint64_t>(std::chrono::nanoseconds(stop - start).count())});
+        static_cast<uint64_t>(std::chrono::nanoseconds(stop - start).count()),
+        start});
   };
 
   std::vector<std::jthread> threads;
@@ -71,8 +73,27 @@ int main(int argc, char **argv) {
     return a.time < b.time;
   });
 
+  // print the scoreboard
+  uint64_t position = 0;
   for (const auto &result : results) {
-    spdlog::info("thread {}: {} ns", result.thread_id, result.time);
+    spdlog::info("#{}: thread {}: {} ns", ++position, result.thread_id,
+                 result.time);
+  }
+
+  // sprint the start times for debugging
+  const auto first_start_time =
+      std::ranges::min_element(results, [](const Result &a, const Result &b) {
+        return a.start_time < b.start_time;
+      })->start_time;
+  std::vector<uint64_t> start_delay(num_threads);
+  std::transform(results.begin(), results.end(), start_delay.begin(),
+                 [&first_start_time](const Result &result) {
+                   return std::chrono::nanoseconds(result.start_time -
+                                                   first_start_time)
+                       .count();
+                 });
+  for (uint64_t i = 0; i < num_threads; ++i) {
+    spdlog::info("thread {}: {} ns", i, start_delay[i]);
   }
 
   return 0;
