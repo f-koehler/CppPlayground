@@ -8,7 +8,7 @@ This is my playground to explore C++ concepts, ideas or investigate how things w
 
 Demonstrate how to comput the greated common divisor of two numbers at compile time.
 
-### ThreadRacer
+### `ThreadRacer`
 
 Demonstrates multiple C++ concurrency/threading concepts (`<atomic>`, `<mutex>`, `<condition_variable>`, `std::jthread`) by letting multiple threads race against each other.
 Aims to achieve low latency (currently usually few hundred nanoseconds depending on platform and number of threads) when starting the threads and shows how to measure time with `<chrono>`.
@@ -20,3 +20,7 @@ A basic string implementation with allocation-free short-string-optimization whi
 ### `ArcPointer`
 
 Atomically reference counted smart pointer for a shared memory resource (similar to `std::shared_ptr` or Rust's `std::sync::Arc`)
+
+### `AllocationSizes`
+
+Demonstrate the short-string-optimization of `std::string` and the growth of capacity ins `std::vector`
