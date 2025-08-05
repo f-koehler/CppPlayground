@@ -1,4 +1,3 @@
-#include "CLI/CLI.hpp"
 #include <CLI/CLI.hpp>
 #include <algorithm>
 #include <atomic>
@@ -10,8 +9,8 @@
 #include <iterator>
 #include <limits>
 #include <memory>
+#include <print>
 #include <ranges>
-#include <spdlog/spdlog.h>
 #include <thread>
 #include <vector>
 
@@ -79,7 +78,7 @@ int main(int argc, char **argv) {
   // print the scoreboard
   uint64_t position = 0;
   for (const auto &result : results) {
-    spdlog::info("#{}: thread {}: {} ns", ++position, result.thread_id,
+    std::println("#{}: thread {}: {} ns", ++position, result.thread_id,
                  result.time);
   }
 
@@ -96,7 +95,7 @@ int main(int argc, char **argv) {
                        .count();
                  });
   for (uint64_t i = 0; i < num_threads; ++i) {
-    spdlog::info("thread {}: {} ns", results[i].thread_id, start_delay[i]);
+    std::println("thread {}: {} ns", results[i].thread_id, start_delay[i]);
   }
 
   return 0;
