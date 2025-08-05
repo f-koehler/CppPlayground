@@ -3,22 +3,24 @@
   lib,
   ...
 }:
+let
+  clangPackage = pkgs.llvmPackages_20.clangUseLLVM;
+in
 
 {
   env = {
     VCPKG_ROOT = "${pkgs.vcpkg}/share/vcpkg";
   };
+  enterShell = ''
+    export CC="${lib.getExe' clangPackage "clang"}";
+    export CXX="${lib.getExe' clangPackage "clang++"}";
+  '';
   packages = [
     pkgs.git
     pkgs.vcpkg
     pkgs.cmake
+    clangPackage
   ];
-
-  languages = {
-    cplusplus = {
-      enable = true;
-    };
-  };
 
   git-hooks.hooks = {
     clang-format = {
