@@ -30,6 +30,20 @@ int main() {
   std::println("\tsize:     {}", string_default_ctor.size());
   std::println("\tempty:    {}", string_default_ctor.empty());
 
+  std::println("std::string (assign long string that should fit):");
+  string_default_ctor = std::string(string_default_ctor.capacity(), 'a');
+  std::println("\tsizeof:   {} B", sizeof(string_default_ctor));
+  std::println("\tcapacity: {}", string_default_ctor.capacity());
+  std::println("\tsize:     {}", string_default_ctor.size());
+  std::println("\tempty:    {}", string_default_ctor.empty());
+
+  std::println("std::string (assign long string that needs a new allocation):");
+  string_default_ctor = std::string(string_default_ctor.capacity() + 1, 'a');
+  std::println("\tsizeof:   {} B", sizeof(string_default_ctor));
+  std::println("\tcapacity: {}", string_default_ctor.capacity());
+  std::println("\tsize:     {}", string_default_ctor.size());
+  std::println("\tempty:    {}", string_default_ctor.empty());
+
   std::println("std::vector<uint64_t> (default ctor):");
   std::vector<uint64_t> vector_uint64_t_default_ctor;
   std::println("\tsizeof:   {} B", sizeof(vector_uint64_t_default_ctor));
