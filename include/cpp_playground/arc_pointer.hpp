@@ -27,7 +27,6 @@ struct ControlBlock {
   void release_ref() {
     if ((--m_num_shared) == 0) {
       m_deleter(m_ptr);
-      delete this;
     }
   }
 };
