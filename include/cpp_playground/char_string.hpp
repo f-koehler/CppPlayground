@@ -11,30 +11,36 @@ namespace CppPlayground {
 
 namespace Detail {
 
-template <IsAllocator AllocatorT> class CharStringBuffer final {
+// TODO(fk): in C++ we can use
+template <IsAllocator AllocatorT = std::allocator<char>>
+class CharStringBuffer final {
 public:
   using Allocator = AllocatorT;
-  struct HeapBuffer {
-    std::allocation_result<char *, std::size_t> data;
-    Allocator allocator;
+
+  // inherit from Allocator type to save memory if it is an empty type
+  struct HeapBuffer : public Allocator {
+    std::size_t capacity;
+    char *data;
+    
+    HeapBuffer() = default;
   };
   static constexpr std::size_t StackBufferSize = sizeof(HeapBuffer);
   static constexpr std::size_t ShortStringLength = StackBufferSize - 1;
   using StackBuffer = char[StackBufferSize];
 
 private:
-  bool m_is_short_string;
   union {
     HeapBuffer heap_buffer;
     StackBuffer stack_buffer;
   } m_buffer;
+  bool m_is_short_string;
 
 public:
   CharStringBuffer() noexcept : m_is_short_string(true) {
     std::fill_n(std::begin(m_buffer.stack_buffer), StackBufferSize, char{0});
   };
   explicit CharStringBuffer(std::size_t capacity) {
-    if (capacity <= ShortStringLength) {
+    if (capacity < ShortStringLength) {
       m_is_short_string = true;
       std::fill_n(std::begin(m_buffer.stack_buffer), StackBufferSize, char{0});
     } else {
@@ -69,9 +75,9 @@ public:
     std::swap(m_buffer, other.m_buffer);
   }
   ~CharStringBuffer() {
-    if (!m_is_short_string && (m_buffer.heap_buffer.data.ptr != nullptr)) {
+    if (!m_is_short_string && (m_buffer.heap_buffer.data != nullptr)) {
       m_buffer.heap_buffer.allocator.deallocate(
-          m_buffer.heap_buffer.data.ptr, m_buffer.heap_buffer.data.count);
+          m_buffer.heap_buffer.data, m_buffer.heap_buffer.capacity);
     }
   }
 
@@ -144,7 +150,7 @@ public:
     return m_buffer.heap_buffer.data.ptr;
   }
 
-  constexpr std::size_t getCapacity() const {
+  constexpr std::size_t get_capacity() const {
     if (m_is_short_string) {
       return ShortStringLength;
     }
