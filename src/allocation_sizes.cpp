@@ -1,4 +1,5 @@
 #include <cassert>
+#include <memory>
 #include <print>
 #include <string>
 #include <vector>
@@ -64,4 +65,12 @@ int main() {
   std::println("\tcapacity: {}", vector_uint64_t_default_ctor.capacity());
   std::println("\tsize:     {}", vector_uint64_t_default_ctor.size());
   std::println("\tempty:    {}", vector_uint64_t_default_ctor.empty());
+
+  std::println("std::shared_ptr<uint64_t>");
+  std::shared_ptr<uint64_t> shared;
+  std::println("\tsizeof: {} B", sizeof(shared));
+
+  std::println("std::unique_ptr<uint64_t>");
+  std::unique_ptr<uint64_t> unique;
+  std::println("\tsizeof: {} B", sizeof(unique));
 }
