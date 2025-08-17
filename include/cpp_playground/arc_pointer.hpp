@@ -2,18 +2,12 @@
 #define CPPPLAYGROUND_ARC_POINTER_HPP
 
 #include <atomic>
+#include <cpp_playground/deleter.hpp>
 #include <cstddef>
 #include <memory>
 #include <type_traits>
 
 namespace CppPlayground {
-
-template <typename T> struct DefaultDelete {
-  void operator()(void *ptr) { delete (T *)ptr; }
-};
-template <typename T> struct DefaultDeleteArray {
-  void operator()(void *ptr) { delete[] (T *)ptr; }
-};
 
 namespace Detail {
 
