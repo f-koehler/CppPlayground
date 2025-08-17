@@ -19,6 +19,7 @@ in
     pkgs.git
     pkgs.vcpkg
     pkgs.cmake
+    pkgs.gcc15
     clangPackage
   ];
 
