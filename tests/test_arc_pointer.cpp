@@ -22,15 +22,6 @@ TEMPLATE_TEST_CASE("ArcPointer: Constructors", "[SmartPointer]", int, char,
   }
 
   SECTION("From Raw Pointer (Check Dtor)") {
-    // struct {
-    //   std::size_t count = 0;
-    //
-    //   void operator()(void *ptr) {
-    //     delete (T *)ptr;
-    //     ++count;
-    //   }
-    // } deleter;
-
     T *raw_pointer = new T{};
     std::size_t count = 0;
 
