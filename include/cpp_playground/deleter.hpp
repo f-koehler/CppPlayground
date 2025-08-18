@@ -2,15 +2,17 @@
 #define CPPPLAYGROUND_DELETER_HPP
 
 #include <concepts>
+#include <cstddef>
 #include <type_traits>
 
 namespace CppPlayground {
-template <typename T>
-concept IsDeleter =
-    std::is_default_constructible_v<T> && requires(T t, void *vptr) {
-      { t(vptr) } -> std::same_as<void>;
-    };
+template <typename Deleter>
+concept IsDeleter = std::is_default_constructible_v<Deleter> &&
+                    requires(Deleter deleter, void *vptr) {
+                      { deleter(vptr) } -> std::same_as<void>;
+                    };
 
+// NOLINTBEGIN(cppcoreguidelines-owning-memory)
 template <typename T> struct DefaultDelete {
   virtual void operator()(void *ptr) { delete (T *)ptr; }
 };
@@ -18,6 +20,7 @@ template <typename T> struct DefaultDelete {
 template <typename T> struct DefaultDeleteArray {
   virtual void operator()(void *ptr) { delete[] (T *)ptr; }
 };
+// NOLINTEND(cppcoreguidelines-owning-memory)
 
 template <IsDeleter Deleter> class CountingDelete : Deleter {
 public:
@@ -32,7 +35,9 @@ public:
     ++m_count;
   }
 
-  constexpr std::size_t get_count() const noexcept { return m_count; }
+  [[nodiscard]] constexpr std::size_t get_count() const noexcept {
+    return m_count;
+  }
 };
 
 } // namespace CppPlayground

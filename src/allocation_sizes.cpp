@@ -1,10 +1,12 @@
 #include <cassert>
+#include <cstdint>
 #include <memory>
 #include <print>
 #include <string>
 #include <vector>
 
 int main() {
+  // NOLINTBEGIN(bugprone-sizeof-container,cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
   std::println("std::string (default ctor):");
   std::string string_default_ctor;
   std::println("\tsizeof:   {} B", sizeof(string_default_ctor));
@@ -67,10 +69,11 @@ int main() {
   std::println("\tempty:    {}", vector_uint64_t_default_ctor.empty());
 
   std::println("std::shared_ptr<uint64_t>");
-  std::shared_ptr<uint64_t> shared;
+  std::shared_ptr<uint64_t> const shared;
   std::println("\tsizeof: {} B", sizeof(shared));
 
   std::println("std::unique_ptr<uint64_t>");
-  std::unique_ptr<uint64_t> unique;
+  std::unique_ptr<uint64_t> const unique;
   std::println("\tsizeof: {} B", sizeof(unique));
+  // NOLINTEND(bugprone-sizeof-container,cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 }

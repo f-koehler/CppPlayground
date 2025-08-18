@@ -1,8 +1,8 @@
 #ifndef CPP_PLAYGROUND_CHAR_STRING_HPP
 #define CPP_PLAYGROUND_CHAR_STRING_HPP
 
+#include "./concepts.hpp"
 #include <algorithm>
-#include <cpp_playground/concepts.hpp>
 #include <cstddef>
 #include <memory>
 #include <span>
@@ -11,7 +11,6 @@ namespace CppPlayground {
 
 namespace Detail {
 
-// TODO(fk): in C++ we can use
 template <IsAllocator AllocatorT = std::allocator<char>>
 class CharStringBuffer final {
 public:
@@ -19,9 +18,9 @@ public:
 
   // inherit from Allocator type to save memory if it is an empty type
   struct HeapBuffer : public Allocator {
-    std::size_t capacity;
-    char *data;
-    
+    std::size_t capacity = 0;
+    char *data = nullptr;
+
     HeapBuffer() = default;
   };
   static constexpr std::size_t StackBufferSize = sizeof(HeapBuffer);
@@ -31,7 +30,7 @@ public:
 private:
   union {
     HeapBuffer heap_buffer;
-    StackBuffer stack_buffer;
+    StackBuffer stack_buffer{0};
   } m_buffer;
   bool m_is_short_string;
 
@@ -51,8 +50,9 @@ public:
       std::fill_n(m_buffer.heap_buffer.data.ptr, capacity + 1, char{0});
     }
   }
-  CharStringBuffer(const CharStringBuffer &other) {
-    m_is_short_string = other.m_is_short_string;
+  CharStringBuffer(const CharStringBuffer &other)
+      : m_is_short_string(other.m_is_short_string) {
+
     if (m_is_short_string) {
       std::copy_n(std::cbegin(other.m_buffer.stack_buffer), StackBufferSize,
                   std::begin(m_buffer.stack_buffer));
@@ -70,18 +70,20 @@ public:
                 char{0});
     }
   }
-  CharStringBuffer(CharStringBuffer &&other) noexcept {
-    std::swap(m_is_short_string, other.m_is_short_string);
-    std::swap(m_buffer, other.m_buffer);
-  }
+  CharStringBuffer(CharStringBuffer &&other) noexcept
+      : m_buffer(std::move(other.m_buffer)),
+        m_is_short_string(other.m_is_short_string) {}
   ~CharStringBuffer() {
     if (!m_is_short_string && (m_buffer.heap_buffer.data != nullptr)) {
-      m_buffer.heap_buffer.allocator.deallocate(
-          m_buffer.heap_buffer.data, m_buffer.heap_buffer.capacity);
+      m_buffer.heap_buffer.allocator.deallocate(m_buffer.heap_buffer.data,
+                                                m_buffer.heap_buffer.capacity);
     }
   }
 
   CharStringBuffer &operator=(const CharStringBuffer &other) {
+    if (this == &other) {
+      return *this;
+    }
     if (m_is_short_string) {
       if (other.m_is_short_string) {
         std::copy_n(std::cbegin(other.m_buffer.stack_buffer), StackBufferSize,
@@ -143,14 +145,15 @@ public:
     }
     return m_buffer.heap_buffer.data.ptr;
   }
-  constexpr const char *get() const {
+  [[nodiscard]] constexpr const char *get() const {
+    // TODO(fk): return "" if empty string
     if (m_is_short_string) {
       return &m_buffer.stack_buffer;
     }
     return m_buffer.heap_buffer.data.ptr;
   }
 
-  constexpr std::size_t get_capacity() const {
+  [[nodiscard]] constexpr std::size_t get_capacity() const {
     if (m_is_short_string) {
       return ShortStringLength;
     }
@@ -173,8 +176,8 @@ public:
   CharString &operator=(CharString &&) = default;
   ~CharString() = default;
 
-  CharString(std::size_t length, char c) : m_buffer(length) {
-    std::fill_n(m_buffer.get(), length, c);
+  CharString(std::size_t length, char character) : m_buffer(length) {
+    std::fill_n(m_buffer.get(), length, character);
   }
 };
 

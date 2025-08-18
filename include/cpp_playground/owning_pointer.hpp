@@ -1,7 +1,7 @@
 #ifndef CPPPLAYGROUND_OWNING_POINTER_HPP
 #define CPPPLAYGROUND_OWNING_POINTER_HPP
 
-#include <cpp_playground/deleter.hpp>
+#include "./deleter.hpp"
 #include <type_traits>
 
 namespace CppPlayground {
@@ -23,11 +23,16 @@ public:
   constexpr explicit OwningPointer(ElementType *ptr) noexcept
       : m_deleter{}, m_ptr{ptr} {}
 
+  OwningPointer(const OwningPointer &) = delete;
   template <typename OtherDeleter>
   OwningPointer(const OwningPointer<T, OtherDeleter> &) = delete;
 
+  constexpr OwningPointer(OwningPointer &&other) noexcept
+      : m_deleter{}, m_ptr{other.m_ptr} {
+    other.m_ptr = nullptr;
+  }
   template <typename OtherDeleter>
-  constexpr OwningPointer(OwningPointer<T, OtherDeleter> &&other)
+  constexpr OwningPointer(OwningPointer<T, OtherDeleter> &&other) noexcept
       : m_deleter{}, m_ptr{other.m_ptr} {
     other.m_ptr = nullptr;
   }

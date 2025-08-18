@@ -15,10 +15,12 @@
 #include <vector>
 
 struct Result {
-  uint64_t thread_id;
-  uint64_t time;
+  uint64_t thread_id = std::numeric_limits<uint64_t>::max();
+  uint64_t time = 0;
   std::chrono::high_resolution_clock::time_point start_time;
 };
+
+static constexpr uint64_t Goal = 1UL << 34UL;
 
 int main(int argc, char **argv) {
   CLI::App app{"Which thread will be the fastest"};
@@ -47,14 +49,15 @@ int main(int argc, char **argv) {
 
     volatile uint64_t counter = 0;
     const auto start = std::chrono::high_resolution_clock::now();
-    while (counter < (uint64_t{1} << 34)) {
+    while (counter < Goal) {
       counter = counter + 1;
     }
     const auto stop = std::chrono::high_resolution_clock::now();
-    promise.set_value(Result{
-        thread_id,
-        static_cast<uint64_t>(std::chrono::nanoseconds(stop - start).count()),
-        start});
+    std::move(promise).set_value(
+        Result{.thread_id = thread_id,
+               .time = static_cast<uint64_t>(
+                   std::chrono::nanoseconds(stop - start).count()),
+               .start_time = start});
   };
 
   std::vector<std::jthread> threads;
@@ -71,8 +74,8 @@ int main(int argc, char **argv) {
   std::transform(future_results.begin(), future_results.end(), results.begin(),
                  [](std::future<Result> &future) { return future.get(); });
 
-  std::ranges::sort(results, [](const Result &a, const Result &b) {
-    return a.time < b.time;
+  std::ranges::sort(results, [](const Result &result1, const Result &result2) {
+    return result1.time < result2.time;
   });
 
   // print the scoreboard
@@ -84,8 +87,9 @@ int main(int argc, char **argv) {
 
   // sprint the start times for debugging
   const auto first_start_time =
-      std::ranges::min_element(results, [](const Result &a, const Result &b) {
-        return a.start_time < b.start_time;
+      std::ranges::min_element(results, [](const Result &result1,
+                                           const Result &result2) {
+        return result1.start_time < result2.start_time;
       })->start_time;
   std::vector<uint64_t> start_delay(num_threads);
   std::transform(results.begin(), results.end(), start_delay.begin(),
