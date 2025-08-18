@@ -1,19 +1,56 @@
 {
-  "version": 2,
+  "$schema": "https://cmake.org/cmake/help/latest/_downloads/3e2d73bff478d88a7de0de736ba5e361/schema.json",
+  "version": 10,
   "configurePresets": [
     {
-      "name": "Debug",
-      "binaryDir": "${sourceDir}/build/Debug",
+      "name": "Clang",
+      "hidden": true,
       "generator": "Unix Makefiles",
+      "environment": {
+        "CC": "clang",
+        "CXX": "clang++"
+      }
+    },
+    {
+      "name": "GCC",
+      "hidden": true,
+      "generator": "Unix Makefiles",
+      "environment": {
+        "CC": "gcc",
+        "CXX": "g++"
+      }
+    },
+    {
+      "name": "Clang-Debug",
+      "binaryDir": "${sourceDir}/build/Debug",
+      "inherits": "Clang",
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
-      "name": "Release",
+      "name": "Clang-Release",
       "binaryDir": "${sourceDir}/build/Release",
-      "generator": "Unix Makefiles",
+      "inherits": "Clang",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "GCC-Debug",
+      "binaryDir": "${sourceDir}/build/Debug",
+      "inherits": "GCC",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "GCC-Release",
+      "binaryDir": "${sourceDir}/build/Release",
+      "inherits": "GCC",
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_BUILD_TYPE": "Release"
@@ -21,13 +58,9 @@
     }
   ],
   "buildPresets": [
-    {
-      "name": "Debug",
-      "configurePreset": "Debug"
-    },
-    {
-      "name": "Release",
-      "configurePreset": "Release"
-    }
+    { "name": "Clang-Debug-All", "configurePreset": "Clang-Debug" },
+    { "name": "Clang-Release-All", "configurePreset": "Clang-Release" },
+    { "name": "GCC-Debug-All", "configurePreset": "GCC-Debug" },
+    { "name": "GCC-Release-All", "configurePreset": "GCC-Release" }
   ]
 }
