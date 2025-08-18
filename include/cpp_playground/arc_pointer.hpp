@@ -9,12 +9,12 @@
 
 namespace CppPlayground {
 
+template <typename T> class ArcPointer;
+
 namespace Detail {
 
 struct ControlBlockBase {
   void *m_ptr;
-  // store deleter with erased type
-  void (*m_deleter)(void *);
   std::atomic_uint64_t m_num_shared;
 
   explicit ControlBlockBase(void *ptr) : m_ptr(ptr), m_num_shared{1} {}
@@ -32,14 +32,14 @@ struct ControlBlockBase {
   }
 };
 
-template <typename Deleter> struct ControlBlock : public ControlBlockBase {
+template <IsDeleter Deleter> struct ControlBlock : public ControlBlockBase {
   // store deleter with EBO
   [[no_unique_address]] Deleter m_deleter;
 
   explicit ControlBlock(void *ptr, const Deleter &deleter)
       : ControlBlockBase(ptr), m_deleter(deleter) {}
   explicit ControlBlock(void *ptr, Deleter &&deleter)
-      : ControlBlockBase(ptr), m_deleter(deleter) {}
+      : ControlBlockBase(ptr), m_deleter(std::move(deleter)) {}
 
   void destroy_object() override { m_deleter(m_ptr); }
 };
@@ -76,15 +76,17 @@ public:
   }
 
   // move constructor
-  ArcPointer(ArcPointer &&other)
+  ArcPointer(ArcPointer &&other) noexcept
       : m_control_block(other.m_control_block), m_ptr(other.m_ptr) {
-    // no benefit of moving our small pointer types, other will be deconstructed
-    // -> decrements ref count
+    other.m_control_block = nullptr;
+    other.m_ptr = nullptr;
   }
 
   // copy assignment
   ArcPointer &operator=(const ArcPointer &other) {
-    // do nothing if pointing to the same control block
+    if (this == &other) {
+      return *this;
+    }
     if (other.m_control_block == m_control_block) {
       return *this;
     }
@@ -97,15 +99,12 @@ public:
   }
 
   // move assignment
-  ArcPointer &operator=(ArcPointer &&other) {
-    if (m_control_block == other.m_control_block) {
-      // pointing to the same control block, other will be deconstructed ->
-      // decrements ref count
-      return *this;
-    }
-
+  ArcPointer &operator=(ArcPointer &&other) noexcept {
+    m_control_block->release_ref();
     m_control_block = other.m_control_block;
     m_ptr = other.m_ptr;
+    other.m_control_block = nullptr;
+    other.m_control_block = nullptr;
   }
 
   virtual ~ArcPointer() {
@@ -114,7 +113,7 @@ public:
     }
   }
 
-  ElementType *get() const noexcept { return m_ptr; }
+  [[nodiscard]] ElementType *get() const noexcept { return m_ptr; }
 };
 } // namespace CppPlayground
 
