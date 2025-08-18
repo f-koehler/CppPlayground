@@ -5,6 +5,7 @@
 }:
 let
   clangPackage = pkgs.llvmPackages_20.clangUseLLVM;
+  gccPackage = pkgs.gcc15;
 in
 
 {
@@ -19,7 +20,8 @@ in
     pkgs.git
     pkgs.vcpkg
     pkgs.cmake
-    pkgs.gcc15
+    pkgs.gdb
+    gccPackage
     clangPackage
   ];
 
