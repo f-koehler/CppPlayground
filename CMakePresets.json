@@ -22,7 +22,7 @@
     },
     {
       "name": "Clang-Debug",
-      "binaryDir": "${sourceDir}/build/Debug",
+      "binaryDir": "${sourceDir}/build/Clang-Debug",
       "inherits": "Clang",
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
@@ -31,7 +31,7 @@
     },
     {
       "name": "Clang-Release",
-      "binaryDir": "${sourceDir}/build/Release",
+      "binaryDir": "${sourceDir}/build/Clang-Release",
       "inherits": "Clang",
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
@@ -40,7 +40,7 @@
     },
     {
       "name": "GCC-Debug",
-      "binaryDir": "${sourceDir}/build/Debug",
+      "binaryDir": "${sourceDir}/build/GCC-Debug",
       "inherits": "GCC",
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
@@ -49,7 +49,7 @@
     },
     {
       "name": "GCC-Release",
-      "binaryDir": "${sourceDir}/build/Release",
+      "binaryDir": "${sourceDir}/build/GCC-Release",
       "inherits": "GCC",
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
