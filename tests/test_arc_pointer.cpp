@@ -51,7 +51,7 @@ TEST_CASE("ArcPointer: Control Block", "[SmartPointer]") {
     using Deleter = CppPlayground::DefaultDelete<T>;
     using ControlBlock = CppPlayground::Detail::ControlBlock<Deleter>;
 
-    autok *block = new ControlBlock(new T("hello"), Deleter{});
+    auto *block = new ControlBlock(new T("hello"), Deleter{});
     T::reset_destruction_count();
     REQUIRE(block->m_num_shared.load() == 1);
     block->release_ref();
@@ -62,7 +62,7 @@ TEST_CASE("ArcPointer: Control Block", "[SmartPointer]") {
     using Deleter = CppPlayground::DefaultDeleteArray<T>;
     using ControlBlock = CppPlayground::Detail::ControlBlock<Deleter>;
 
-    autok *block = new ControlBlock(new T[10], Deleter{});
+    auto *block = new ControlBlock(new T[10], Deleter{});
     T::reset_destruction_count();
     REQUIRE(block->m_num_shared.load() == 1);
     block->release_ref();
