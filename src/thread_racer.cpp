@@ -70,9 +70,11 @@ int main(int argc, char **argv) {
     threads.emplace_back(thread_func, i, std::move(promise));
   }
 
-  std::vector<Result> results(num_threads);
-  std::transform(future_results.begin(), future_results.end(), results.begin(),
-                 [](std::future<Result> &future) { return future.get(); });
+  std::vector<Result> results(
+      std::from_range,
+      future_results | std::views::transform([](std::future<Result> &future) {
+        return future.get();
+      }));
 
   std::ranges::sort(results, [](const Result &result1, const Result &result2) {
     return result1.time < result2.time;
@@ -91,13 +93,13 @@ int main(int argc, char **argv) {
                                            const Result &result2) {
         return result1.start_time < result2.start_time;
       })->start_time;
-  std::vector<uint64_t> start_delay(num_threads);
-  std::transform(results.begin(), results.end(), start_delay.begin(),
-                 [&first_start_time](const Result &result) {
-                   return std::chrono::nanoseconds(result.start_time -
-                                                   first_start_time)
-                       .count();
-                 });
+  std::vector<uint64_t> start_delay(
+      std::from_range,
+      results | std::views::transform([&first_start_time](
+                                          const Result &result) {
+        return std::chrono::nanoseconds(result.start_time - first_start_time)
+            .count();
+      }));
   for (uint64_t i = 0; i < num_threads; ++i) {
     std::println("thread {}: {} ns", results[i].thread_id, start_delay[i]);
   }
