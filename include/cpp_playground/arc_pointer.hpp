@@ -17,8 +17,13 @@ struct ControlBlockBase {
   void *m_ptr;
   std::atomic_uint64_t m_num_shared;
 
-  explicit ControlBlockBase(void *ptr) : m_ptr(ptr), m_num_shared{1} {}
+  explicit ControlBlockBase(void *ptr = nullptr)
+      : m_ptr(ptr), m_num_shared{1} {}
   virtual ~ControlBlockBase() = default;
+  ControlBlockBase(const ControlBlockBase &) = delete;
+  ControlBlockBase(ControlBlockBase &&) = delete;
+  ControlBlockBase &operator=(const ControlBlockBase &) = delete;
+  ControlBlockBase &operator=(ControlBlockBase &&) = delete;
 
   virtual void destroy_object() = 0;
   void add_ref() { ++m_num_shared; }
@@ -105,6 +110,7 @@ public:
     m_ptr = other.m_ptr;
     other.m_control_block = nullptr;
     other.m_control_block = nullptr;
+    return *this;
   }
 
   virtual ~ArcPointer() {
