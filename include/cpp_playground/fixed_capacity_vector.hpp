@@ -42,87 +42,19 @@ public:
   operator=(FixedCapacityVector &&other) noexcept(
       std::is_nothrow_move_constructible_v<ValueType>);
 
-  [[nodiscard]] constexpr SizeType size() const noexcept { return m_size; }
-  [[nodiscard]] constexpr bool is_empty() const noexcept {
-    return m_size == 0UL;
-  }
-  [[nodiscard]] constexpr bool is_full() const noexcept {
-    return m_size == Capacity;
-  }
-  [[nodiscard]] constexpr ConstReferenceType front() const {
-    if (is_empty()) {
-      throw std::out_of_range("FixedCapacityVector: Attempt to access front "
-                              "element of empty vector");
-    }
-    return *m_data;
-  }
-  [[nodiscard]] constexpr ConstReferenceType back() const {
-    if (is_empty()) {
-      throw std::out_of_range("FixedCapacityVector: Attempt to access back "
-                              "element of empty vector");
-    }
-    return m_data[m_size - 1];
-  }
-  [[nodiscard]] constexpr ReferenceType front() {
-    if (is_empty()) {
-      throw std::out_of_range("FixedCapacityVector: Attempt to access front "
-                              "element of empty vector");
-    }
-    return *m_data;
-  }
-  [[nodiscard]] constexpr ReferenceType back() {
-    if (is_empty()) {
-      throw std::out_of_range("FixedCapacityVector: Attempt to access back "
-                              "element of empty vector");
-    }
-    return m_data[m_size - 1];
-  }
-  [[nodiscard]] constexpr ReferenceType at(SizeType index) {
-    if (index >= m_size) {
-      throw std::out_of_range("FixedCapacityVector: Out of range access");
-    }
-    return m_data[index];
-  }
-  [[nodiscard]] constexpr ConstReferenceType at(SizeType index) const {
-    if (index >= m_size) {
-      throw std::out_of_range("FixedCapacityVector: Out of range access");
-    }
-    return m_data[index];
-  }
-  constexpr void clear() noexcept {
-    if (is_empty()) {
-      return;
-    }
-
-    if constexpr (!std::is_trivially_destructible_v<T>) {
-      // destruct all constructed objects
-      for (SizeType i = 0; i < m_size; ++i) {
-        m_data[i].~T();
-      }
-    }
-    m_size = 0;
-  }
-  constexpr void push_back(const T &value) {
-    if (is_full()) {
-      throw std::length_error("FixedCapacityVector: Attempt to push back "
-                              "element into a full vector");
-    }
-    new (&m_data[m_size++]) T(value);
-  }
-  constexpr void push_back(T &&value) {
-    if (is_full()) {
-      throw std::length_error("FixedCapacityVector: Attempt to push back "
-                              "element into a full vector");
-    }
-    new (&m_data[m_size++]) T(std::move(value));
-  }
-  constexpr void pop_back() {
-    if (is_empty()) {
-      throw std::out_of_range("FixedCapacityVector: Attempt to pop back "
-                              "element of empty vector");
-    }
-    m_data[--m_size].~T();
-  }
+  [[nodiscard]] constexpr SizeType size() const noexcept;
+  [[nodiscard]] constexpr bool is_empty() const noexcept;
+  [[nodiscard]] constexpr bool is_full() const noexcept;
+  [[nodiscard]] constexpr ConstReferenceType front() const;
+  [[nodiscard]] constexpr ConstReferenceType back() const;
+  [[nodiscard]] constexpr ReferenceType front();
+  [[nodiscard]] constexpr ReferenceType back();
+  [[nodiscard]] constexpr ReferenceType at(SizeType index);
+  [[nodiscard]] constexpr ConstReferenceType at(SizeType index) const;
+  constexpr void clear() noexcept;
+  constexpr void push_back(const T &value);
+  constexpr void push_back(T &&value);
+  constexpr void pop_back();
 };
 
 template <typename T, std::size_t C>
@@ -196,6 +128,124 @@ constexpr FixedCapacityVector<T, C> &FixedCapacityVector<T, C>::operator=(
   }
   other.m_size = 0;
   return *this;
+}
+
+template <typename T, std::size_t C>
+[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::SizeType
+FixedCapacityVector<T, C>::size() const noexcept {
+  return m_size;
+}
+
+template <typename T, std::size_t C>
+[[nodiscard]] constexpr bool
+FixedCapacityVector<T, C>::is_empty() const noexcept {
+  return m_size == 0UL;
+}
+
+template <typename T, std::size_t C>
+[[nodiscard]] constexpr bool
+FixedCapacityVector<T, C>::is_full() const noexcept {
+  return m_size == C;
+}
+
+template <typename T, std::size_t C>
+[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ConstReferenceType
+FixedCapacityVector<T, C>::front() const {
+  if (is_empty()) {
+    throw std::out_of_range("FixedCapacityVector: Attempt to access front "
+                            "element of empty vector");
+  }
+  return *m_data;
+}
+
+template <typename T, std::size_t C>
+[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ConstReferenceType
+FixedCapacityVector<T, C>::back() const {
+  if (is_empty()) {
+    throw std::out_of_range("FixedCapacityVector: Attempt to access back "
+                            "element of empty vector");
+  }
+  return m_data[m_size - 1];
+}
+
+template <typename T, std::size_t C>
+[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ReferenceType
+FixedCapacityVector<T, C>::front() {
+  if (is_empty()) {
+    throw std::out_of_range("FixedCapacityVector: Attempt to access front "
+                            "element of empty vector");
+  }
+  return *m_data;
+}
+
+template <typename T, std::size_t C>
+[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ReferenceType
+FixedCapacityVector<T, C>::back() {
+  if (is_empty()) {
+    throw std::out_of_range("FixedCapacityVector: Attempt to access back "
+                            "element of empty vector");
+  }
+  return m_data[m_size - 1];
+}
+
+template <typename T, std::size_t C>
+[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ReferenceType
+FixedCapacityVector<T, C>::at(SizeType index) {
+  if (index >= m_size) {
+    throw std::out_of_range("FixedCapacityVector: Out of range access");
+  }
+  return m_data[index];
+}
+
+template <typename T, std::size_t C>
+[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ConstReferenceType
+FixedCapacityVector<T, C>::at(SizeType index) const {
+  if (index >= m_size) {
+    throw std::out_of_range("FixedCapacityVector: Out of range access");
+  }
+  return m_data[index];
+}
+
+template <typename T, std::size_t C>
+constexpr void FixedCapacityVector<T, C>::clear() noexcept {
+  if (is_empty()) {
+    return;
+  }
+
+  if constexpr (!std::is_trivially_destructible_v<T>) {
+    // destruct all constructed objects
+    for (SizeType i = 0; i < m_size; ++i) {
+      m_data[i].~T();
+    }
+  }
+  m_size = 0;
+}
+
+template <typename T, std::size_t C>
+constexpr void FixedCapacityVector<T, C>::push_back(const T &value) {
+  if (is_full()) {
+    throw std::length_error("FixedCapacityVector: Attempt to push back "
+                            "element into a full vector");
+  }
+  new (&m_data[m_size++]) T(value);
+}
+
+template <typename T, std::size_t C>
+constexpr void FixedCapacityVector<T, C>::push_back(T &&value) {
+  if (is_full()) {
+    throw std::length_error("FixedCapacityVector: Attempt to push back "
+                            "element into a full vector");
+  }
+  new (&m_data[m_size++]) T(std::move(value));
+}
+
+template <typename T, std::size_t C>
+constexpr void FixedCapacityVector<T, C>::pop_back() {
+  if (is_empty()) {
+    throw std::out_of_range("FixedCapacityVector: Attempt to pop back "
+                            "element of empty vector");
+  }
+  m_data[--m_size].~T();
 }
 
 } // namespace CppPlayground
