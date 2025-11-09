@@ -54,6 +54,8 @@ public:
   constexpr void clear() noexcept;
   constexpr void push_back(const T &value);
   constexpr void push_back(T &&value);
+  template <typename... Args>
+  constexpr ReferenceType emplace_back(Args &&...args);
   constexpr void pop_back();
 };
 
@@ -237,6 +239,17 @@ constexpr void FixedCapacityVector<T, C>::push_back(T &&value) {
                             "element into a full vector");
   }
   new (&m_data[m_size++]) T(std::move(value));
+}
+
+template <typename T, std::size_t C>
+template <typename... Args>
+constexpr typename FixedCapacityVector<T, C>::ReferenceType
+FixedCapacityVector<T, C>::emplace_back(Args &&...args) {
+  if (is_full()) {
+    throw std::length_error("FixedCapacityVector: Attempt to emplace back "
+                            "element into a full vector");
+  }
+  new (&m_data[m_size++]) T(std::forward<Args>(args)...);
 }
 
 template <typename T, std::size_t C>
