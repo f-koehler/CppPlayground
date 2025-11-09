@@ -2,6 +2,7 @@
 #define CPPPLAYGROUND_FIXED_CAPACITY_VECTOR_HPP
 
 #include <cstddef>
+#include <iterator>
 #include <stdexcept>
 #include <type_traits>
 
@@ -25,6 +26,15 @@ public:
   using ReferenceType = T &;
   /// A const reference to an element.
   using ConstReferenceType = const T &;
+
+  /// A mutable random-access iterator.
+  using Iterator = T *;
+  /// A constant random-access iterator.
+  using ConstIterator = const T *;
+  /// A mutable reverse random-access iterator.
+  using ReverseIterator = std::reverse_iterator<Iterator>;
+  /// A constant reverse random-access iterator.
+  using ConstReverseIterator = std::reverse_iterator<ConstIterator>;
 
   /// The maximum number of elements the vector can hold.
   static constexpr SizeType Capacity = Capacity_;
@@ -188,6 +198,74 @@ public:
    * @throw std::out_of_range if the vector is empty.
    */
   constexpr void pop_back();
+
+  /**
+   * @brief Returns an iterator to the beginning of the vector.
+   * @return An iterator to the first element.
+   */
+  [[nodiscard]] constexpr Iterator begin() noexcept;
+  /**
+   * @brief Returns a const iterator to the beginning of the vector.
+   * @return A const iterator to the first element.
+   */
+  [[nodiscard]] constexpr ConstIterator begin() const noexcept;
+  /**
+   * @brief Returns a const iterator to the beginning of the vector.
+   * @return A const iterator to the first element.
+   */
+  [[nodiscard]] constexpr ConstIterator cbegin() const noexcept;
+  /**
+   * @brief Returns a reverse iterator to the beginning of the reversed vector.
+   * @return A reverse iterator to the first element of the reversed vector.
+   */
+  [[nodiscard]] constexpr ReverseIterator rbegin() noexcept;
+  /**
+   * @brief Returns a const reverse iterator to the beginning of the reversed
+   * vector.
+   * @return A const reverse iterator to the first element of the reversed
+   * vector.
+   */
+  [[nodiscard]] constexpr ConstReverseIterator rbegin() const noexcept;
+  /**
+   * @brief Returns a const reverse iterator to the beginning of the reversed
+   * vector.
+   * @return A const reverse iterator to the first element of the reversed
+   * vector.
+   */
+  [[nodiscard]] constexpr ConstReverseIterator crbegin() const noexcept;
+  /**
+   * @brief Returns an iterator to the end of the vector.
+   * @return An iterator to the element following the last element.
+   */
+  [[nodiscard]] constexpr Iterator end() noexcept;
+  /**
+   * @brief Returns a const iterator to the end of the vector.
+   * @return A const iterator to the element following the last element.
+   */
+  [[nodiscard]] constexpr ConstIterator end() const noexcept;
+  /**
+   * @brief Returns a const iterator to the end of the vector.
+   * @return A const iterator to the element following the last element.
+   */
+  [[nodiscard]] constexpr ConstIterator cend() const noexcept;
+  /**
+   * @brief Returns a reverse iterator to the end of the reversed vector.
+   * @return A reverse iterator to the element following the last element of the
+   * reversed vector.
+   */
+  [[nodiscard]] constexpr ReverseIterator rend() noexcept;
+  /**
+   * @brief Returns a const reverse iterator to the end of the reversed vector.
+   * @return A const reverse iterator to the element following the last element
+   * of the reversed vector.
+   */
+  [[nodiscard]] constexpr ConstReverseIterator rend() const noexcept;
+  /**
+   * @brief Returns a const reverse iterator to the end of the reversed vector.
+   * @return A const reverse iterator to the element following the last element
+   * of the reversed vector.
+   */
+  [[nodiscard]] constexpr ConstReverseIterator crend() const noexcept;
 };
 
 template <typename T, std::size_t C>
@@ -390,6 +468,78 @@ constexpr void FixedCapacityVector<T, C>::pop_back() {
                             "element of empty vector");
   }
   m_data[--m_size].~T();
+}
+
+template <typename T, std::size_t C>
+[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::Iterator
+FixedCapacityVector<T, C>::begin() noexcept {
+  return m_data;
+}
+
+template <typename T, std::size_t C>
+[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ConstIterator
+FixedCapacityVector<T, C>::begin() const noexcept {
+  return m_data;
+}
+
+template <typename T, std::size_t C>
+[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ConstIterator
+FixedCapacityVector<T, C>::cbegin() const noexcept {
+  return m_data;
+}
+
+template <typename T, std::size_t C>
+[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ReverseIterator
+FixedCapacityVector<T, C>::rbegin() noexcept {
+  return std::make_reverse_iterator(end());
+}
+
+template <typename T, std::size_t C>
+[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ConstReverseIterator
+FixedCapacityVector<T, C>::rbegin() const noexcept {
+  return std::make_reverse_iterator(end());
+}
+
+template <typename T, std::size_t C>
+[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ConstReverseIterator
+FixedCapacityVector<T, C>::crbegin() const noexcept {
+  return std::make_reverse_iterator(cbegin());
+}
+
+template <typename T, std::size_t C>
+[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::Iterator
+FixedCapacityVector<T, C>::end() noexcept {
+  return m_data + m_size;
+}
+
+template <typename T, std::size_t C>
+[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ConstIterator
+FixedCapacityVector<T, C>::end() const noexcept {
+  return m_data + m_size;
+}
+
+template <typename T, std::size_t C>
+[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ConstIterator
+FixedCapacityVector<T, C>::cend() const noexcept {
+  return m_data + m_size;
+}
+
+template <typename T, std::size_t C>
+[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ReverseIterator
+FixedCapacityVector<T, C>::rend() noexcept {
+  return std::make_reverse_iterator(begin());
+}
+
+template <typename T, std::size_t C>
+[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ConstReverseIterator
+FixedCapacityVector<T, C>::rend() const noexcept {
+  return std::make_reverse_iterator(begin());
+}
+
+template <typename T, std::size_t C>
+[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ConstReverseIterator
+FixedCapacityVector<T, C>::crend() const noexcept {
+  return std::make_reverse_iterator(cbegin());
 }
 
 } // namespace CppPlayground
