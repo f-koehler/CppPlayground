@@ -6,14 +6,29 @@
 #include <type_traits>
 
 namespace CppPlayground {
+/**
+ * @brief A vector with a fixed capacity, allocated on the stack.
+ * @details This vector provides a std::vector-like interface but with a
+ * compile-time fixed capacity. The memory is allocated on the stack, avoiding
+ * dynamic memory allocation. This is useful for real-time and
+ * performance-critical applications where heap allocation is undesirable.
+ * @tparam T The type of elements to be stored.
+ * @tparam Capacity_ The maximum number of elements the vector can hold.
+ */
 template <typename T, std::size_t Capacity_> class FixedCapacityVector {
 public:
+  /// The type used for size and capacity.
   using SizeType = std::size_t;
+  /// The type of the elements stored in the vector.
   using ValueType = T;
+  /// A reference to an element.
   using ReferenceType = T &;
+  /// A const reference to an element.
   using ConstReferenceType = const T &;
 
+  /// The maximum number of elements the vector can hold.
   static constexpr SizeType Capacity = Capacity_;
+  /// The size of a single element in bytes.
   static constexpr SizeType ElementSize = sizeof(ValueType);
 
 private:
@@ -22,40 +37,156 @@ private:
   SizeType m_size = 0UL;
 
 public:
+  /**
+   * @brief Default constructor. Constructs an empty vector.
+   */
   constexpr FixedCapacityVector() noexcept = default;
 
+  /**
+   * @brief Copy constructor.
+   * @details Copies elements from another FixedCapacityVector. The other vector
+   * can have a different capacity.
+   * @tparam OtherCapacity The capacity of the other vector.
+   * @param other The vector to copy from.
+   * @throw std::length_error if the other vector's size exceeds this vector's
+   * capacity.
+   */
   template <SizeType OtherCapacity>
   constexpr FixedCapacityVector(
       const FixedCapacityVector<T, OtherCapacity>
           &other) noexcept(std::is_nothrow_copy_constructible_v<ValueType>);
 
+  /**
+   * @brief Move constructor.
+   * @details Moves elements from another FixedCapacityVector.
+   * @param other The vector to move from.
+   */
   constexpr FixedCapacityVector(FixedCapacityVector &&other) noexcept(
       std::is_nothrow_move_constructible_v<ValueType>);
 
+  /**
+   * @brief Destructor. Destroys all elements in the vector.
+   */
   constexpr ~FixedCapacityVector();
 
+  /**
+   * @brief Copy assignment operator.
+   * @tparam OtherCapacity The capacity of the other vector.
+   * @param other The vector to copy from.
+   * @return A reference to this vector.
+   * @throw std::length_error if the other vector's size exceeds this vector's
+   * capacity.
+   */
   template <SizeType OtherCapacity>
   constexpr FixedCapacityVector &
   operator=(const FixedCapacityVector<ValueType, OtherCapacity>
                 &other) noexcept(std::is_nothrow_copy_constructible_v<T>);
+
+  /**
+   * @brief Move assignment operator.
+   * @param other The vector to move from.
+   * @return A reference to this vector.
+   */
   constexpr FixedCapacityVector &
   operator=(FixedCapacityVector &&other) noexcept(
       std::is_nothrow_move_constructible_v<ValueType>);
 
+  /**
+   * @brief Returns the number of elements in the vector.
+   * @return The current number of elements.
+   */
   [[nodiscard]] constexpr SizeType size() const noexcept;
+
+  /**
+   * @brief Checks if the vector is empty.
+   * @return true if the vector is empty, false otherwise.
+   */
   [[nodiscard]] constexpr bool is_empty() const noexcept;
+
+  /**
+   * @brief Checks if the vector is full.
+   * @return true if the vector has reached its capacity, false otherwise.
+   */
   [[nodiscard]] constexpr bool is_full() const noexcept;
+
+  /**
+   * @brief Accesses the first element.
+   * @return A const reference to the first element.
+   * @throw std::out_of_range if the vector is empty.
+   */
   [[nodiscard]] constexpr ConstReferenceType front() const;
+
+  /**
+   * @brief Accesses the last element.
+   * @return A const reference to the last element.
+   * @throw std::out_of_range if the vector is empty.
+   */
   [[nodiscard]] constexpr ConstReferenceType back() const;
+
+  /**
+   * @brief Accesses the first element.
+   * @return A reference to the first element.
+   * @throw std::out_of_range if the vector is empty.
+   */
   [[nodiscard]] constexpr ReferenceType front();
+
+  /**
+   * @brief Accesses the last element.
+   * @return A reference to the last element.
+   * @throw std::out_of_range if the vector is empty.
+   */
   [[nodiscard]] constexpr ReferenceType back();
+
+  /**
+   * @brief Accesses the element at a specific index with bounds checking.
+   * @param index The index of the element to access.
+   * @return A reference to the element at the specified index.
+   * @throw std::out_of_range if the index is out of bounds.
+   */
   [[nodiscard]] constexpr ReferenceType at(SizeType index);
+
+  /**
+   * @brief Accesses the element at a specific index with bounds checking.
+   * @param index The index of the element to access.
+   * @return A const reference to the element at the specified index.
+   * @throw std::out_of_range if the index is out of bounds.
+   */
   [[nodiscard]] constexpr ConstReferenceType at(SizeType index) const;
+
+  /**
+   * @brief Clears the vector, destroying all elements.
+   */
   constexpr void clear() noexcept;
+
+  /**
+   * @brief Adds an element to the end of the vector by copying.
+   * @param value The value to add.
+   * @throw std::length_error if the vector is full.
+   */
   constexpr void push_back(const T &value);
+
+  /**
+   * @brief Adds an element to the end of the vector by moving.
+   * @param value The value to add.
+   * @throw std::length_error if the vector is full.
+   */
   constexpr void push_back(T &&value);
+
+  /**
+   * @brief Constructs an element in-place at the end of the vector.
+   * @tparam Args The types of the arguments to forward to the constructor of
+   * the element.
+   * @param args The arguments to forward.
+   * @return A reference to the newly constructed element.
+   * @throw std::length_error if the vector is full.
+   */
   template <typename... Args>
   constexpr ReferenceType emplace_back(Args &&...args);
+
+  /**
+   * @brief Removes the last element from the vector.
+   * @throw std::out_of_range if the vector is empty.
+   */
   constexpr void pop_back();
 };
 
