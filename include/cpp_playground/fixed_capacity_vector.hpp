@@ -43,7 +43,7 @@ public:
 
 private:
   alignas(ValueType) unsigned char m_buffer[Capacity * ElementSize] = {0U};
-  T *m_data = reinterpret_cast<T *>(m_buffer);
+  T *m_data = (T *)m_buffer;
   SizeType m_size = 0UL;
 
 public:
