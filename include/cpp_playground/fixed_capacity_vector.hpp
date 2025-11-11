@@ -179,6 +179,20 @@ public:
   [[nodiscard]] constexpr ConstReferenceType at(SizeType index) const;
 
   /**
+   * @brief Returns a pointer to the underlying array serving as element
+   * storage.
+   * @return A pointer to the underlying array.
+   */
+  [[nodiscard]] constexpr T *data() noexcept;
+
+  /**
+   * @brief Returns a const pointer to the underlying array serving as element
+   * storage.
+   * @return A const pointer to the underlying array.
+   */
+  [[nodiscard]] constexpr const T *data() const noexcept;
+
+  /**
    * @brief Clears the vector, destroying all elements.
    */
   constexpr void clear() noexcept;
@@ -442,6 +456,17 @@ FixedCapacityVector<T, C>::at(SizeType index) const {
     throw std::out_of_range("FixedCapacityVector: Out of range access");
   }
   return m_data[index];
+}
+
+template <typename T, std::size_t C>
+[[nodiscard]] constexpr T *FixedCapacityVector<T, C>::data() noexcept {
+  return m_data;
+}
+
+template <typename T, std::size_t C>
+[[nodiscard]] constexpr const T *
+FixedCapacityVector<T, C>::data() const noexcept {
+  return m_data;
 }
 
 template <typename T, std::size_t C>
