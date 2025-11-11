@@ -2,6 +2,7 @@
 #define CPPPLAYGROUND_FIXED_CAPACITY_VECTOR_HPP
 
 #include <cstddef>
+#include <initializer_list>
 #include <iterator>
 #include <stdexcept>
 #include <type_traits>
@@ -73,6 +74,16 @@ public:
    */
   constexpr FixedCapacityVector(FixedCapacityVector &&other) noexcept(
       std::is_nothrow_move_constructible_v<ValueType>);
+
+  /**
+   * @brief Initializer list constructor.
+   * @details Constructs the vector with the elements from the provided
+   * initializer list.
+   * @param init The initializer list to copy elements from.
+   * @throw std::length_error if the size of the initializer list exceeds the
+   * vector's capacity.
+   */
+  constexpr FixedCapacityVector(std::initializer_list<T> init);
 
   /**
    * @brief Destructor. Destroys all elements in the vector.
@@ -294,6 +305,18 @@ constexpr FixedCapacityVector<T, C>::FixedCapacityVector(
     other.m_data[i].~T();
   }
   other.m_size = 0;
+}
+
+template <typename T, std::size_t C>
+constexpr FixedCapacityVector<T, C>::FixedCapacityVector(
+    std::initializer_list<T> init) {
+  if (init.size() > C) {
+    throw std::length_error("FixedCapacityVector: Attempt to initialize with "
+                            "more elements than capacity");
+  }
+  for (const auto &item : init) {
+    new (&m_data[m_size++]) T(item);
+  }
 }
 
 template <typename T, std::size_t C>
