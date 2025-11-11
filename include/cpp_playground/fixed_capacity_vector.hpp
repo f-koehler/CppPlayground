@@ -118,6 +118,10 @@ public:
    */
   [[nodiscard]] constexpr SizeType size() const noexcept;
 
+  [[nodiscard]] consteval SizeType capacity() const noexcept {
+    return Capacity;
+  }
+
   /**
    * @brief Checks if the vector is empty.
    * @return true if the vector is empty, false otherwise.
