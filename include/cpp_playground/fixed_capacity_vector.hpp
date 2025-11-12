@@ -53,6 +53,9 @@ public:
    */
   constexpr FixedCapacityVector() noexcept = default;
 
+  constexpr FixedCapacityVector(const FixedCapacityVector &other) noexcept(
+      std::is_nothrow_copy_constructible_v<ValueType>);
+
   /**
    * @brief Copy constructor.
    * @details Copies elements from another FixedCapacityVector. The other vector
@@ -296,6 +299,16 @@ public:
    */
   [[nodiscard]] constexpr ConstReverseIterator crend() const noexcept;
 };
+
+template <typename T, std::size_t C>
+constexpr FixedCapacityVector<T, C>::FixedCapacityVector(
+    const FixedCapacityVector<T, C>
+        &other) noexcept(std::is_nothrow_copy_constructible_v<ValueType>) {
+  m_size = other.m_size;
+  for (SizeType i = 0; i < other.m_size; ++i) {
+    new (&m_data[i]) T(other.m_data[i]);
+  }
+}
 
 template <typename T, std::size_t C>
 template <std::size_t OtherCapacity>
