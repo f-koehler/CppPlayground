@@ -67,8 +67,7 @@ public:
    */
   template <SizeType OtherCapacity>
   constexpr FixedCapacityVector(
-      const FixedCapacityVector<T, OtherCapacity>
-          &other) noexcept(std::is_nothrow_copy_constructible_v<ValueType>);
+      const FixedCapacityVector<T, OtherCapacity> &other);
 
   /**
    * @brief Move constructor.
@@ -313,15 +312,15 @@ constexpr FixedCapacityVector<T, C>::FixedCapacityVector(
 template <typename T, std::size_t C>
 template <std::size_t OtherCapacity>
 constexpr FixedCapacityVector<T, C>::FixedCapacityVector(
-    const FixedCapacityVector<T, OtherCapacity>
-        &other) noexcept(std::is_nothrow_copy_constructible_v<T>) {
-  if (other.m_size > C) {
+    const FixedCapacityVector<T, OtherCapacity> &other) {
+
+  if (other.size() > C) {
     throw std::length_error("FixedCapacityVector: Attempt to copy from a "
                             "vector with more elements than capacity");
   }
-  for (SizeType i = 0; i < other.m_size; ++i) {
+  for (SizeType i = 0; i < other.size(); ++i) {
     // use placement new operator to copy construct objects at the right place
-    new (&m_data[i]) T(other.m_data[i]);
+    new (&m_data[i]) T(other.data()[i]);
     ++m_size;
   }
 }
