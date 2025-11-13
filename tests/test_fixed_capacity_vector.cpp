@@ -1,6 +1,6 @@
 #include <algorithm>
 #include <catch2/catch_test_macros.hpp>
-#include <cpp_playground/fixed_capacity_vector.hpp>
+#include <CppPlayground/fixed_capacity_vector.hpp>
 #include <cstdint>
 #include <iterator>
 #include <ranges>
