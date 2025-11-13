@@ -53,6 +53,12 @@ public:
    */
   constexpr FixedCapacityVector() noexcept = default;
 
+  /**
+   * @brief Copy constructor.
+   * @details Copies elements from another FixedCapacityVector with the same
+   * capacity.
+   * @param other The vector to copy from.
+   */
   constexpr FixedCapacityVector(const FixedCapacityVector &other) noexcept(
       std::is_nothrow_copy_constructible_v<ValueType>);
 
@@ -132,6 +138,10 @@ public:
    */
   [[nodiscard]] constexpr SizeType size() const noexcept;
 
+  /**
+   * @brief Returns the maximum number of elements the vector can hold.
+   * @return The capacity of the vector.
+   */
   [[nodiscard]] consteval SizeType capacity() const noexcept {
     return Capacity;
   }
@@ -191,6 +201,20 @@ public:
    * @throw std::out_of_range if the index is out of bounds.
    */
   [[nodiscard]] constexpr ConstReferenceType at(SizeType index) const;
+
+  /**
+   * @brief Accesses the element at a specific index without bounds checking.
+   * @param index The index of the element to access.
+   * @return A reference to the element at the specified index.
+   */
+  [[nodiscard]] constexpr ReferenceType operator[](SizeType index) noexcept;
+  /**
+   * @brief Accesses the element at a specific index without bounds checking.
+   * @param index The index of the element to access.
+   * @return A const reference to the element at the specified index.
+   */
+  [[nodiscard]] constexpr ConstReferenceType
+  operator[](SizeType index) const noexcept;
 
   /**
    * @brief Returns a pointer to the underlying array serving as element
@@ -486,6 +510,18 @@ FixedCapacityVector<T, C>::at(SizeType index) {
   if (index >= m_size) {
     throw std::out_of_range("FixedCapacityVector: Out of range access");
   }
+  return m_data[index];
+}
+
+template <typename T, std::size_t C>
+[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ReferenceType
+FixedCapacityVector<T, C>::operator[](SizeType index) noexcept {
+  return m_data[index];
+}
+
+template <typename T, std::size_t C>
+[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ConstReferenceType
+FixedCapacityVector<T, C>::operator[](SizeType index) const noexcept {
   return m_data[index];
 }
 
