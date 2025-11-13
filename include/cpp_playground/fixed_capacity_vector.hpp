@@ -136,6 +136,13 @@ public:
       std::is_nothrow_move_constructible_v<ValueType>);
 
   /**
+   * @brief Resizes the vector to the specified size.
+   * @param new_size The new size of the vector.
+   * @throw std::length_error if the new size exceeds the vector's capacity.
+   */
+  constexpr void resize(SizeType new_size);
+
+  /**
    * @brief Returns the number of elements in the vector.
    * @return The current number of elements.
    */
@@ -447,6 +454,19 @@ constexpr FixedCapacityVector<T, C> &FixedCapacityVector<T, C>::operator=(
   }
   other.m_size = 0;
   return *this;
+}
+
+template <typename T, std::size_t C>
+constexpr void FixedCapacityVector<T, C>::resize(SizeType new_size) {
+  if (m_size == new_size) {
+    return;
+  }
+  while (m_size > new_size) {
+    pop_back();
+  }
+  while (m_size < new_size) {
+    emplace_back();
+  }
 }
 
 template <typename T, std::size_t C>
