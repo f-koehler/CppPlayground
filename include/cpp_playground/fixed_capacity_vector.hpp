@@ -631,7 +631,7 @@ FixedCapacityVector<T, C>::rbegin() const noexcept {
 template <typename T, std::size_t C>
 [[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ConstReverseIterator
 FixedCapacityVector<T, C>::crbegin() const noexcept {
-  return std::make_reverse_iterator(cbegin());
+  return std::make_reverse_iterator(cend());
 }
 
 template <typename T, std::size_t C>
