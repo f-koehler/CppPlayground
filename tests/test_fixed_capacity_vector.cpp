@@ -1,6 +1,9 @@
+#include <algorithm>
 #include <catch2/catch_test_macros.hpp>
 #include <cpp_playground/fixed_capacity_vector.hpp>
 #include <cstdint>
+#include <iterator>
+#include <ranges>
 #include <stdexcept>
 
 using namespace CppPlayground;
@@ -143,6 +146,7 @@ TEST_CASE("FixedCapacityVector: Element Accessors", "[Containers]") {
     }
   }
 }
+
 TEST_CASE("FixedCapacityVector: Iterators", "[Containers][Iterators]") {
   SECTION("Forward Iteration") {
     SECTION("Mutable Vector") {
@@ -216,3 +220,29 @@ TEST_CASE("FixedCapacityVector: Iterators", "[Containers][Iterators]") {
   }
 }
 
+TEST_CASE("FixedCapacityVector: Modification Through Iterators",
+          "[Containers][Iterators]") {
+  FixedCapacityVector<uint64_t, 3UL> vector = {1UL, 2UL, 3UL};
+  std::transform(vector.begin(), vector.end(), vector.begin(),
+                 [](uint64_t value) { return value * 2; });
+  REQUIRE(vector.at(0) == 2UL);
+  REQUIRE(vector.at(1) == 4UL);
+  REQUIRE(vector.at(2) == 6UL);
+
+  FixedCapacityVector<uint64_t, 3UL> copy;
+  std::copy(vector.cbegin(), vector.cend(), std::back_inserter(copy));
+  REQUIRE(copy.at(0) == 2UL);
+  REQUIRE(copy.at(1) == 4UL);
+  REQUIRE(copy.at(2) == 6UL);
+  REQUIRE(copy.size() == 3UL);
+
+  std::ranges::reverse(copy);
+  REQUIRE(copy.at(0) == 6UL);
+  REQUIRE(copy.at(1) == 4UL);
+  REQUIRE(copy.at(2) == 2UL);
+
+  std::ranges::sort(copy);
+  REQUIRE(copy.at(0) == 2UL);
+  REQUIRE(copy.at(1) == 4UL);
+  REQUIRE(copy.at(2) == 6UL);
+}

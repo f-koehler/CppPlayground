@@ -28,6 +28,9 @@ public:
   /// A const reference to an element.
   using ConstReferenceType = const T &;
 
+  /// Alias for ValueType for compatibility with std::back_inserter
+  using value_type = ValueType;
+
   /// A mutable random-access iterator.
   using Iterator = T *;
   /// A constant random-access iterator.
