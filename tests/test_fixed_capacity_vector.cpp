@@ -5,7 +5,7 @@
 
 using namespace CppPlayground;
 
-TEST_CASE("FixedCapacityVector: Constructors") {
+TEST_CASE("FixedCapacityVector: Constructors", "[Containers]") {
   constexpr uint64_t Capacity = 3UL;
   SECTION("Default Constructor") {
     FixedCapacityVector<uint64_t, Capacity> vector;
