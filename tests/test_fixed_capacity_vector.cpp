@@ -110,3 +110,36 @@ TEST_CASE("FixedCapacityVector: Constructors", "[Containers]") {
     }
   }
 }
+
+TEST_CASE("FixedCapacityVector: Element Accessors", "[Containers]") {
+  SECTION("at()") {
+    SECTION("mutable vector") {
+      FixedCapacityVector<uint64_t, 3UL> vector = {1UL, 2UL};
+      REQUIRE(vector.at(0) == 1UL);
+      REQUIRE(vector.at(1) == 2UL);
+      REQUIRE_THROWS_AS(vector.at(2), std::out_of_range);
+      REQUIRE_THROWS_AS(vector.at(3), std::out_of_range);
+      REQUIRE_THROWS_AS(vector.at(4), std::out_of_range);
+    }
+    SECTION("const vector") {
+      const FixedCapacityVector<uint64_t, 3UL> vector = {1UL, 2UL};
+      REQUIRE(vector.at(0) == 1UL);
+      REQUIRE(vector.at(1) == 2UL);
+      REQUIRE_THROWS_AS(vector.at(2), std::out_of_range);
+      REQUIRE_THROWS_AS(vector.at(3), std::out_of_range);
+      REQUIRE_THROWS_AS(vector.at(4), std::out_of_range);
+    }
+  }
+  SECTION("at()") {
+    SECTION("mutable vector") {
+      FixedCapacityVector<uint64_t, 3UL> vector = {1UL, 2UL};
+      REQUIRE(vector.at(0) == 1UL);
+      REQUIRE(vector.at(1) == 2UL);
+    }
+    SECTION("const vector") {
+      const FixedCapacityVector<uint64_t, 3UL> vector = {1UL, 2UL};
+      REQUIRE(vector.at(0) == 1UL);
+      REQUIRE(vector.at(1) == 2UL);
+    }
+  }
+}
