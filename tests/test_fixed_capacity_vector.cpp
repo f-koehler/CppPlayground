@@ -143,3 +143,76 @@ TEST_CASE("FixedCapacityVector: Element Accessors", "[Containers]") {
     }
   }
 }
+TEST_CASE("FixedCapacityVector: Iterators", "[Containers][Iterators]") {
+  SECTION("Forward Iteration") {
+    SECTION("Mutable Vector") {
+      FixedCapacityVector<uint64_t, 3UL> vector = {1UL, 2UL, 3UL};
+      auto it = vector.begin();
+      REQUIRE(*it == 1UL);
+      ++it;
+      REQUIRE(*it == 2UL);
+      ++it;
+      REQUIRE(*it == 3UL);
+      ++it;
+      REQUIRE(it == vector.end());
+    }
+    SECTION("Mutable Vector (const iter)") {
+      FixedCapacityVector<uint64_t, 3UL> vector = {1UL, 2UL, 3UL};
+      auto it = vector.cbegin();
+      REQUIRE(*it == 1UL);
+      ++it;
+      REQUIRE(*it == 2UL);
+      ++it;
+      REQUIRE(*it == 3UL);
+      ++it;
+      REQUIRE(it == vector.cend());
+    }
+    SECTION("Mutable Vector") {
+      const FixedCapacityVector<uint64_t, 3UL> vector = {1UL, 2UL, 3UL};
+      auto it = vector.begin();
+      REQUIRE(*it == 1UL);
+      ++it;
+      REQUIRE(*it == 2UL);
+      ++it;
+      REQUIRE(*it == 3UL);
+      ++it;
+      REQUIRE(it == vector.end());
+    }
+  }
+  SECTION("Reverse Iteration") {
+    SECTION("Mutable Vector") {
+      FixedCapacityVector<uint64_t, 3UL> vector = {1UL, 2UL, 3UL};
+      auto it = vector.rbegin();
+      REQUIRE(*it == 3UL);
+      ++it;
+      REQUIRE(*it == 2UL);
+      ++it;
+      REQUIRE(*it == 1UL);
+      ++it;
+      REQUIRE(it == vector.rend());
+    }
+    SECTION("Mutable Vector (const iter)") {
+      FixedCapacityVector<uint64_t, 3UL> vector = {1UL, 2UL, 3UL};
+      auto it = vector.crbegin();
+      REQUIRE(*it == 3UL);
+      ++it;
+      REQUIRE(*it == 2UL);
+      ++it;
+      REQUIRE(*it == 1UL);
+      ++it;
+      REQUIRE(it == vector.crend());
+    }
+    SECTION("Mutable Vector") {
+      const FixedCapacityVector<uint64_t, 3UL> vector = {1UL, 2UL, 3UL};
+      auto it = vector.rbegin();
+      REQUIRE(*it == 3UL);
+      ++it;
+      REQUIRE(*it == 2UL);
+      ++it;
+      REQUIRE(*it == 1UL);
+      ++it;
+      REQUIRE(it == vector.rend());
+    }
+  }
+}
+
