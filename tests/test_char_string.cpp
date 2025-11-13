@@ -1,6 +1,6 @@
 #include <catch2/catch_template_test_macros.hpp>
 #include <catch2/catch_test_macros.hpp>
-#include <cpp_playground/char_string.hpp>
+#include <CppPlayground/char_string.hpp>
 #include <memory>
 #include <memory_resource>
 

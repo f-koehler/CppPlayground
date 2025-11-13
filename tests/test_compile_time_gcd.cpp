@@ -1,5 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
-#include <cpp_playground/compile_time_gcd.hpp>
+#include <CppPlayground/compile_time_gcd.hpp>
 
 using namespace CppPlayground;
 
