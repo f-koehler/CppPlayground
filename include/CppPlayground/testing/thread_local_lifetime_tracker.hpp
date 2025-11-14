@@ -1,5 +1,5 @@
-#ifndef CPP_PLAYGROUND_TESTING_LIFETIMETRACKER_HPP
-#define CPP_PLAYGROUND_TESTING_LIFETIMETRACKER_HPP
+#ifndef CPP_PLAYGROUND_TESTING_THREAD_LOCAL_LIFETIME_TRACKER_HPP
+#define CPP_PLAYGROUND_TESTING_THREAD_LOCAL_LIFETIME_TRACKER_HPP
 
 #include <cstdint>
 
@@ -12,7 +12,7 @@ namespace CppPlayground::Testing {
  * used as a template parameter in data structures to verify their correctness
  * in managing object lifetimes.
  */
-class LifetimeTracker {
+class ThreadLocalLifetimeTracker {
 private:
   thread_local inline static int64_t m_num_constructions = 0UL;
   thread_local inline static int64_t m_num_destructions = 0UL;
@@ -31,40 +31,38 @@ public:
   /**
    * @brief Default constructor. Increments the default construction counter.
    */
-  LifetimeTracker() noexcept;
+  ThreadLocalLifetimeTracker() noexcept;
   /**
    * @brief Copy constructor. Increments the copy construction counter.
    */
-  LifetimeTracker(const LifetimeTracker &other) noexcept;
+  ThreadLocalLifetimeTracker(const ThreadLocalLifetimeTracker &other) noexcept;
   /**
    * @brief Move constructor. Increments the move construction counter.
    */
-  LifetimeTracker(LifetimeTracker &&other) noexcept;
+  ThreadLocalLifetimeTracker(ThreadLocalLifetimeTracker &&other) noexcept;
   /**
    * @brief Destructor. Increments the destruction counter.
    */
-  ~LifetimeTracker();
+  ~ThreadLocalLifetimeTracker();
   /**
    * @brief Copy assignment operator. Increments the copy assignment counter.
    */
-  LifetimeTracker &operator=(const LifetimeTracker &other) noexcept;
+  ThreadLocalLifetimeTracker &
+  operator=(const ThreadLocalLifetimeTracker &other) noexcept;
   /**
    * @brief Move assignment operator. Increments the move assignment counter.
    */
-  LifetimeTracker &operator=(LifetimeTracker &&other) noexcept;
+  ThreadLocalLifetimeTracker &
+  operator=(ThreadLocalLifetimeTracker &&other) noexcept;
 
   /**
    * @brief Returns the total number of constructions (default, copy, and move).
    */
-  static int64_t num_constructions() noexcept {
-    return m_num_constructions;
-  }
+  static int64_t num_constructions() noexcept { return m_num_constructions; }
   /**
    * @brief Returns the total number of destructions.
    */
-  static int64_t num_destructions() noexcept {
-    return m_num_destructions;
-  }
+  static int64_t num_destructions() noexcept { return m_num_destructions; }
   /**
    * @brief Returns the number of default constructions.
    */
