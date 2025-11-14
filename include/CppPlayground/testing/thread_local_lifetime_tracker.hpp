@@ -106,25 +106,30 @@ struct ThreadLocalLifetimeTrackerFixture {
    * @brief Resets the `ThreadLocalLifetimeTracker` counters.
    */
   ThreadLocalLifetimeTrackerFixture() { ThreadLocalLifetimeTracker::reset(); }
+
   /**
    * @brief Deleted copy constructor.
    */
   ThreadLocalLifetimeTrackerFixture(const ThreadLocalLifetimeTrackerFixture &) =
       delete;
+
   /**
    * @brief Defaulted move constructor.
    */
   ThreadLocalLifetimeTrackerFixture(ThreadLocalLifetimeTrackerFixture &&) =
       default;
+
   /**
    * @brief Resets the `ThreadLocalLifetimeTracker` counters upon destruction.
    */
   ~ThreadLocalLifetimeTrackerFixture() { ThreadLocalLifetimeTracker::reset(); }
+
   /**
    * @brief Deleted copy assignment operator.
    */
   ThreadLocalLifetimeTrackerFixture &
   operator=(const ThreadLocalLifetimeTrackerFixture &) = delete;
+
   /**
    * @brief Defaulted move assignment operator.
    */

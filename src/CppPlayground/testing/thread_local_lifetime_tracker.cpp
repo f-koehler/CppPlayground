@@ -46,11 +46,4 @@ ThreadLocalLifetimeTracker &ThreadLocalLifetimeTracker::operator=(
   return *this;
 }
 
-ThreadLocalLifetimeTrackerFixture::ThreadLocalLifetimeTrackerFixture() {
-  ThreadLocalLifetimeTracker::reset();
-}
-ThreadLocalLifetimeTrackerFixture::~ThreadLocalLifetimeTrackerFixture() {
-  ThreadLocalLifetimeTracker::reset();
-}
-
 } // namespace CppPlayground::Testing
