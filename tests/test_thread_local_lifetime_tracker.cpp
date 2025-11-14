@@ -4,18 +4,9 @@
 #include <vector>
 
 using CppPlayground::Testing::ThreadLocalLifetimeTracker;
+using CppPlayground::Testing::ThreadLocalLifetimeTrackerFixture;
 
-// A fixture to ensure counters are reset before each test section
-struct LifetimeTrackerFixture {
-  LifetimeTrackerFixture() { ThreadLocalLifetimeTracker::reset(); }
-  LifetimeTrackerFixture(const LifetimeTrackerFixture &) = delete;
-  LifetimeTrackerFixture(LifetimeTrackerFixture &&) = default;
-  ~LifetimeTrackerFixture() { ThreadLocalLifetimeTracker::reset(); }
-  LifetimeTrackerFixture &operator=(const LifetimeTrackerFixture &) = delete;
-  LifetimeTrackerFixture &operator=(LifetimeTrackerFixture &&) = default;
-};
-
-TEST_CASE_METHOD(LifetimeTrackerFixture,
+TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
                  "ThreadLocalLifetimeTracker: count default constructions",
                  "[Testing]") {
   SECTION("Single object") {
@@ -41,7 +32,7 @@ TEST_CASE_METHOD(LifetimeTrackerFixture,
   }
 }
 
-TEST_CASE_METHOD(LifetimeTrackerFixture,
+TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
                  "ThreadLocalLifetimeTracker: count copy constructions",
                  "[Testing]") {
   ThreadLocalLifetimeTracker original;
@@ -58,7 +49,7 @@ TEST_CASE_METHOD(LifetimeTrackerFixture,
   }
 }
 
-TEST_CASE_METHOD(LifetimeTrackerFixture,
+TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
                  "ThreadLocalLifetimeTracker: count move constructions",
                  "[testing][thread-local]") {
   ThreadLocalLifetimeTracker original;
@@ -75,7 +66,7 @@ TEST_CASE_METHOD(LifetimeTrackerFixture,
   }
 }
 
-TEST_CASE_METHOD(LifetimeTrackerFixture,
+TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
                  "ThreadLocalLifetimeTracker: count copy assignments",
                  "[Testing]") {
   ThreadLocalLifetimeTracker obj1;
@@ -89,7 +80,7 @@ TEST_CASE_METHOD(LifetimeTrackerFixture,
   }
 }
 
-TEST_CASE_METHOD(LifetimeTrackerFixture,
+TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
                  "ThreadLocalLifetimeTracker: count move assignments",
                  "[Testing]") {
   ThreadLocalLifetimeTracker obj1;
@@ -103,7 +94,7 @@ TEST_CASE_METHOD(LifetimeTrackerFixture,
   }
 }
 
-TEST_CASE_METHOD(LifetimeTrackerFixture,
+TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
                  "ThreadLocalLifetimeTracker: count destructions",
                  "[Testing]") {
   SECTION("Destruction of a single object") {
@@ -125,8 +116,8 @@ TEST_CASE_METHOD(LifetimeTrackerFixture,
   }
 }
 
-TEST_CASE_METHOD(LifetimeTrackerFixture, "ThreadLocalLifetimeTracker: reset",
-                 "[Testing]") {
+TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
+                 "ThreadLocalLifetimeTracker: reset", "[Testing]") {
   ThreadLocalLifetimeTracker obj1;
   ThreadLocalLifetimeTracker obj2(obj1);
   ThreadLocalLifetimeTracker obj3(std::move(obj1));

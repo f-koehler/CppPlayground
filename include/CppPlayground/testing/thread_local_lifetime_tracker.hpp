@@ -94,6 +94,43 @@ public:
     return m_num_move_assignments;
   }
 };
+
+/**
+ * @brief A test fixture that resets the `ThreadLocalLifetimeTracker` counters.
+ * @details This fixture resets the counters in its constructor and destructor,
+ * ensuring a clean state for each test or test section that uses it. It is
+ * non-copyable to prevent accidental misuse.
+ */
+struct ThreadLocalLifetimeTrackerFixture {
+  /**
+   * @brief Resets the `ThreadLocalLifetimeTracker` counters.
+   */
+  ThreadLocalLifetimeTrackerFixture() { ThreadLocalLifetimeTracker::reset(); }
+  /**
+   * @brief Deleted copy constructor.
+   */
+  ThreadLocalLifetimeTrackerFixture(const ThreadLocalLifetimeTrackerFixture &) =
+      delete;
+  /**
+   * @brief Defaulted move constructor.
+   */
+  ThreadLocalLifetimeTrackerFixture(ThreadLocalLifetimeTrackerFixture &&) =
+      default;
+  /**
+   * @brief Resets the `ThreadLocalLifetimeTracker` counters upon destruction.
+   */
+  ~ThreadLocalLifetimeTrackerFixture() { ThreadLocalLifetimeTracker::reset(); }
+  /**
+   * @brief Deleted copy assignment operator.
+   */
+  ThreadLocalLifetimeTrackerFixture &
+  operator=(const ThreadLocalLifetimeTrackerFixture &) = delete;
+  /**
+   * @brief Defaulted move assignment operator.
+   */
+  ThreadLocalLifetimeTrackerFixture &
+  operator=(ThreadLocalLifetimeTrackerFixture &&) = default;
+};
 } // namespace CppPlayground::Testing
 
 #endif
