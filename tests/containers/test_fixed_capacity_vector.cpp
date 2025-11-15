@@ -1,6 +1,6 @@
 #include <algorithm>
 #include <catch2/catch_test_macros.hpp>
-#include <cpp_playground/fixed_capacity_vector.hpp>
+#include <cpp_playground/containers/fixed_capacity_vector.hpp>
 #include <cpp_playground/testing/thread_local_lifetime_tracker.hpp>
 #include <cstdint>
 #include <iterator>
