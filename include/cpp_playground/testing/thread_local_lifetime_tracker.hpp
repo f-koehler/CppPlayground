@@ -26,34 +26,65 @@ public:
   /**
    * @brief Resets all lifetime event counters to zero.
    */
-  static void reset();
+  static void reset() {
+    m_num_constructions = 0UL;
+    m_num_destructions = 0UL;
+    m_num_default_constructions = 0UL;
+    m_num_copy_constructions = 0UL;
+    m_num_move_constructions = 0UL;
+    m_num_copy_assignments = 0UL;
+    m_num_move_assignments = 0UL;
+  }
 
   /**
    * @brief Default constructor. Increments the default construction counter.
    */
-  ThreadLocalLifetimeTracker() noexcept;
+  ThreadLocalLifetimeTracker() noexcept {
+    ++m_num_default_constructions;
+    ++m_num_constructions;
+  }
   /**
    * @brief Copy constructor. Increments the copy construction counter.
    */
-  ThreadLocalLifetimeTracker(const ThreadLocalLifetimeTracker &other) noexcept;
+  ThreadLocalLifetimeTracker(
+      [[maybe_unused]] const ThreadLocalLifetimeTracker &other) noexcept {
+    ++m_num_copy_constructions;
+    ++m_num_constructions;
+  }
   /**
    * @brief Move constructor. Increments the move construction counter.
    */
-  ThreadLocalLifetimeTracker(ThreadLocalLifetimeTracker &&other) noexcept;
+  ThreadLocalLifetimeTracker(
+      [[maybe_unused]] ThreadLocalLifetimeTracker &&other) noexcept {
+    ++m_num_move_constructions;
+    ++m_num_constructions;
+  }
   /**
    * @brief Destructor. Increments the destruction counter.
    */
-  ~ThreadLocalLifetimeTracker();
+  ~ThreadLocalLifetimeTracker() { ++m_num_destructions; }
   /**
    * @brief Copy assignment operator. Increments the copy assignment counter.
    */
   ThreadLocalLifetimeTracker &
-  operator=(const ThreadLocalLifetimeTracker &other) noexcept;
+  operator=(const ThreadLocalLifetimeTracker &other) noexcept {
+    if (this == &other) {
+      return *this;
+    }
+    ++m_num_copy_assignments;
+    return *this;
+  }
   /**
    * @brief Move assignment operator. Increments the move assignment counter.
    */
   ThreadLocalLifetimeTracker &
-  operator=(ThreadLocalLifetimeTracker &&other) noexcept;
+  operator=(ThreadLocalLifetimeTracker &&other) noexcept {
+    if (this == &other) {
+      return *this;
+    }
+    ++m_num_move_assignments;
+    return *this;
+  }
 
   /**
    * @brief Returns the total number of constructions (default, copy, and move).
