@@ -610,6 +610,7 @@ FixedCapacityVector<T, C>::emplace_back(Args &&...args) {
                             "element into a full vector");
   }
   new (&m_data[m_size++]) T(std::forward<Args>(args)...);
+  return m_data[m_size - 1];
 }
 
 template <typename T, std::size_t C>

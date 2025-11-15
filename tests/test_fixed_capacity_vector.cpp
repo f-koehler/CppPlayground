@@ -326,3 +326,126 @@ TEST_CASE("FixedCapacityVector: Modification Through Iterators",
   REQUIRE(copy.at(1) == 4UL);
   REQUIRE(copy.at(2) == 6UL);
 }
+
+TEST_CASE("FixedCapacityVector: Modifiers (uint64_t)", "[containers]") {
+  constexpr uint64_t Capacity = 3UL;
+  FixedCapacityVector<uint64_t, Capacity> vector;
+
+  SECTION("push_back l-value, r-value, and emplace_back") {
+    uint64_t value = 42;
+    vector.push_back(value);
+    REQUIRE(vector.size() == 1);
+    REQUIRE(vector.back() == 42);
+
+    vector.push_back(1337);
+    REQUIRE(vector.size() == 2);
+    REQUIRE(vector.back() == 1337);
+
+    REQUIRE(vector.emplace_back(9001) == 9001);
+    REQUIRE(vector.size() == 3);
+    REQUIRE(vector.back() == 9001);
+    REQUIRE(vector.is_full());
+  }
+
+  SECTION("pop_back") {
+    vector = {1, 2, 3};
+    REQUIRE(!vector.is_empty());
+
+    vector.pop_back();
+    REQUIRE(vector.size() == 2);
+    REQUIRE(vector.back() == 2);
+
+    vector.pop_back();
+    REQUIRE(vector.size() == 1);
+    REQUIRE(vector.back() == 1);
+
+    vector.pop_back();
+    REQUIRE(vector.is_empty());
+  }
+
+  SECTION("Push/Emplace on full vector throws") {
+    vector = {1, 2, 3};
+    REQUIRE(vector.is_full());
+    uint64_t value = 4;
+    REQUIRE_THROWS_AS(vector.push_back(value), std::length_error);
+    REQUIRE_THROWS_AS(vector.push_back(4), std::length_error);
+    REQUIRE_THROWS_AS(vector.emplace_back(4), std::length_error);
+  }
+
+  vector.clear();
+  SECTION("Pop on empty vector throws") {
+    REQUIRE_THROWS_AS(vector.pop_back(), std::out_of_range);
+  }
+}
+
+TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
+                 "FixedCapacityVector: push_back (l-value)", "[containers]") {
+  constexpr uint64_t Capacity = 3UL;
+
+  {
+    FixedCapacityVector<ThreadLocalLifetimeTracker, Capacity> vector;
+    ThreadLocalLifetimeTracker tracker;
+    REQUIRE(ThreadLocalLifetimeTracker::num_default_constructions() == 1);
+    vector.push_back(tracker);
+    REQUIRE(vector.size() == 1);
+    REQUIRE(ThreadLocalLifetimeTracker::num_copy_constructions() == 1);
+    REQUIRE(ThreadLocalLifetimeTracker::num_constructions() == 2);
+    REQUIRE(ThreadLocalLifetimeTracker::num_destructions() == 0);
+  }
+  REQUIRE(ThreadLocalLifetimeTracker::num_destructions() == 2);
+}
+
+TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
+                 "FixedCapacityVector: push_back (r-value)", "[containers]") {
+  constexpr uint64_t Capacity = 3UL;
+
+  {
+    FixedCapacityVector<ThreadLocalLifetimeTracker, Capacity> vector;
+    vector.push_back(ThreadLocalLifetimeTracker{});
+    REQUIRE(ThreadLocalLifetimeTracker::num_default_constructions() == 1);
+    REQUIRE(vector.size() == 1);
+    REQUIRE(ThreadLocalLifetimeTracker::num_move_constructions() == 1);
+    REQUIRE(ThreadLocalLifetimeTracker::num_constructions() == 2);
+  }
+  REQUIRE(ThreadLocalLifetimeTracker::num_destructions() == 2);
+}
+
+TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
+                 "FixedCapacityVector: emplace_back (r-value)",
+                 "[containers]") {
+  constexpr uint64_t Capacity = 3UL;
+
+  {
+    FixedCapacityVector<ThreadLocalLifetimeTracker, Capacity> vector;
+    vector.emplace_back();
+    REQUIRE(ThreadLocalLifetimeTracker::num_default_constructions() == 1);
+    REQUIRE(vector.size() == 1);
+    REQUIRE(ThreadLocalLifetimeTracker::num_constructions() == 1);
+  }
+  REQUIRE(ThreadLocalLifetimeTracker::num_destructions() == 1);
+}
+
+TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
+                 "FixedCapacityVector: pop_back",
+                 "[containers]") {
+  constexpr uint64_t Capacity = 3;
+  FixedCapacityVector<ThreadLocalLifetimeTracker, Capacity> vector;
+  vector.emplace_back();
+  vector.emplace_back();
+  vector.emplace_back();
+  REQUIRE(vector.is_full());
+  REQUIRE(ThreadLocalLifetimeTracker::num_default_constructions() == 3);
+  REQUIRE(ThreadLocalLifetimeTracker::num_destructions() == 0);
+
+  vector.pop_back();
+  REQUIRE(vector.size() == 2);
+  REQUIRE(ThreadLocalLifetimeTracker::num_destructions() == 1);
+
+  vector.pop_back();
+  REQUIRE(vector.size() == 1);
+  REQUIRE(ThreadLocalLifetimeTracker::num_destructions() == 2);
+
+  vector.pop_back();
+  REQUIRE(vector.is_empty());
+  REQUIRE(ThreadLocalLifetimeTracker::num_destructions() == 3);
+}
