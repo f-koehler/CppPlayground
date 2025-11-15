@@ -24,3 +24,11 @@ Atomically reference counted smart pointer for a shared memory resource (similar
 ### `AllocationSizes`
 
 Demonstrate the short-string-optimization of `std::string` and the growth of capacity ins `std::vector`
+
+### `FixedCapacityVector`
+
+Demonstrate the implementation of a fixed-capacity stack-allocated vector with a `std::vector`-like interface.
+
+### `ThreadLocalLifetimeTracker`/`ThreadLocalLifetimeTrackerFixture`
+
+Tracking object for constructions, destructions and assignments. Useful when testing container implementations.
