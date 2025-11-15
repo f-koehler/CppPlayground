@@ -118,7 +118,7 @@ TEST_CASE("FixedCapacityVector: Constructors", "[containers]") {
 
 TEST_CASE_METHOD(
     ThreadLocalLifetimeTrackerFixture,
-    "FixedCapacityVector: default contructor with lifetime tracker",
+    "FixedCapacityVector: default constructor with lifetime tracker",
     "[containers]") {
   constexpr uint64_t Capacity = 3UL;
   {
@@ -134,7 +134,7 @@ TEST_CASE_METHOD(
 
 TEST_CASE_METHOD(
     ThreadLocalLifetimeTrackerFixture,
-    "FixedCapacityVector: initializer list contructor with lifetime tracker",
+    "FixedCapacityVector: initializer list constructor with lifetime tracker",
     "[containers]") {
   constexpr uint64_t Capacity = 3UL;
   {
@@ -153,7 +153,7 @@ TEST_CASE_METHOD(
 }
 
 TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
-                 "FixedCapacityVector: copy contructor with lifetime tracker",
+                 "FixedCapacityVector: copy constructor with lifetime tracker",
                  "[containers]") {
   constexpr uint64_t Capacity = 3UL;
   const FixedCapacityVector<ThreadLocalLifetimeTracker, Capacity> vector = {
@@ -174,7 +174,7 @@ TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
 }
 
 TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
-                 "FixedCapacityVector: move contructor with lifetime tracker",
+                 "FixedCapacityVector: move constructor with lifetime tracker",
                  "[containers]") {
   constexpr uint64_t Capacity = 3UL;
   FixedCapacityVector<ThreadLocalLifetimeTracker, Capacity> vector = {
