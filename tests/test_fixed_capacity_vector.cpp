@@ -216,13 +216,13 @@ TEST_CASE("FixedCapacityVector: Element Accessors", "[containers]") {
   SECTION("at()") {
     SECTION("mutable vector") {
       FixedCapacityVector<uint64_t, 3UL> vector = {1UL, 2UL};
-      REQUIRE(vector.at(0) == 1UL);
-      REQUIRE(vector.at(1) == 2UL);
+      REQUIRE(vector[0] == 1UL);
+      REQUIRE(vector[1] == 2UL);
     }
     SECTION("const vector") {
       const FixedCapacityVector<uint64_t, 3UL> vector = {1UL, 2UL};
-      REQUIRE(vector.at(0) == 1UL);
-      REQUIRE(vector.at(1) == 2UL);
+      REQUIRE(vector[0] == 1UL);
+      REQUIRE(vector[1] == 2UL);
     }
   }
 }
