@@ -1,12 +1,14 @@
 #include <algorithm>
 #include <catch2/catch_test_macros.hpp>
 #include <cpp_playground/fixed_capacity_vector.hpp>
+#include <cpp_playground/testing/thread_local_lifetime_tracker.hpp>
 #include <cstdint>
 #include <iterator>
 #include <ranges>
 #include <stdexcept>
 
 using namespace CppPlayground;
+using namespace CppPlayground::Testing;
 
 TEST_CASE("FixedCapacityVector: Constructors", "[Containers]") {
   constexpr uint64_t Capacity = 3UL;
@@ -112,6 +114,84 @@ TEST_CASE("FixedCapacityVector: Constructors", "[Containers]") {
       REQUIRE(vector.is_empty());
     }
   }
+}
+
+TEST_CASE_METHOD(
+    ThreadLocalLifetimeTrackerFixture,
+    "FixedCapacityVector: default contructor with lifetime tracker",
+    "[containers]") {
+  constexpr uint64_t Capacity = 3UL;
+  {
+    const FixedCapacityVector<ThreadLocalLifetimeTracker, Capacity> vector;
+    REQUIRE(vector.size() == 0UL);
+    REQUIRE(vector.capacity() == Capacity);
+    REQUIRE(vector.is_empty());
+    REQUIRE(!vector.is_full());
+    REQUIRE(ThreadLocalLifetimeTracker::num_constructions() == 0);
+  }
+  REQUIRE(ThreadLocalLifetimeTracker::num_destructions() == 0);
+}
+
+TEST_CASE_METHOD(
+    ThreadLocalLifetimeTrackerFixture,
+    "FixedCapacityVector: initializer list contructor with lifetime tracker",
+    "[containers]") {
+  constexpr uint64_t Capacity = 3UL;
+  {
+    const FixedCapacityVector<ThreadLocalLifetimeTracker, Capacity> vector = {
+        ThreadLocalLifetimeTracker{}, ThreadLocalLifetimeTracker{},
+        ThreadLocalLifetimeTracker{}};
+    REQUIRE(vector.size() == 3UL);
+    REQUIRE(vector.capacity() == Capacity);
+    REQUIRE(!vector.is_empty());
+    REQUIRE(vector.is_full());
+    REQUIRE(ThreadLocalLifetimeTracker::num_constructions() == 6);
+    REQUIRE(ThreadLocalLifetimeTracker::num_default_constructions() == 3);
+    REQUIRE(ThreadLocalLifetimeTracker::num_copy_constructions() == 3);
+  }
+  REQUIRE(ThreadLocalLifetimeTracker::num_destructions() == 6);
+}
+
+TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
+                 "FixedCapacityVector: copy contructor with lifetime tracker",
+                 "[containers]") {
+  constexpr uint64_t Capacity = 3UL;
+  const FixedCapacityVector<ThreadLocalLifetimeTracker, Capacity> vector = {
+      ThreadLocalLifetimeTracker{}, ThreadLocalLifetimeTracker{},
+      ThreadLocalLifetimeTracker{}};
+  {
+    ThreadLocalLifetimeTracker::reset();
+    const FixedCapacityVector<ThreadLocalLifetimeTracker, Capacity> copy(
+        vector);
+    REQUIRE(copy.size() == 3UL);
+    REQUIRE(copy.capacity() == Capacity);
+    REQUIRE(!copy.is_empty());
+    REQUIRE(copy.is_full());
+    REQUIRE(ThreadLocalLifetimeTracker::num_constructions() == 3);
+    REQUIRE(ThreadLocalLifetimeTracker::num_copy_constructions() == 3);
+  }
+  REQUIRE(ThreadLocalLifetimeTracker::num_destructions() == 3);
+}
+
+TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
+                 "FixedCapacityVector: move contructor with lifetime tracker",
+                 "[containers]") {
+  constexpr uint64_t Capacity = 3UL;
+  FixedCapacityVector<ThreadLocalLifetimeTracker, Capacity> vector = {
+      ThreadLocalLifetimeTracker{}, ThreadLocalLifetimeTracker{},
+      ThreadLocalLifetimeTracker{}};
+  {
+    ThreadLocalLifetimeTracker::reset();
+    const FixedCapacityVector<ThreadLocalLifetimeTracker, Capacity> moved(
+        std::move(vector));
+    REQUIRE(moved.size() == 3UL);
+    REQUIRE(moved.capacity() == Capacity);
+    REQUIRE(!moved.is_empty());
+    REQUIRE(moved.is_full());
+    REQUIRE(ThreadLocalLifetimeTracker::num_constructions() == 3);
+    REQUIRE(ThreadLocalLifetimeTracker::num_move_constructions() == 3);
+  }
+  REQUIRE(ThreadLocalLifetimeTracker::num_destructions() == 6);
 }
 
 TEST_CASE("FixedCapacityVector: Element Accessors", "[Containers]") {
