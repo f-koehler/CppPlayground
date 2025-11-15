@@ -421,9 +421,6 @@ template <std::size_t OtherCapacity>
 constexpr FixedCapacityVector<T, C> &FixedCapacityVector<T, C>::operator=(
     const FixedCapacityVector<T, OtherCapacity>
         &other) noexcept(std::is_nothrow_copy_constructible_v<T>) {
-  if (this == &other) {
-    return *this;
-  }
   if (other.m_size > C) {
     throw std::length_error("FixedCapacityVector: Attempt to copy from a "
                             "vector with more elements than capacity");
