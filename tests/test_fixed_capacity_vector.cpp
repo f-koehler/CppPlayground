@@ -10,7 +10,7 @@
 using namespace CppPlayground;
 using namespace CppPlayground::Testing;
 
-TEST_CASE("FixedCapacityVector: Constructors", "[Containers]") {
+TEST_CASE("FixedCapacityVector: Constructors", "[containers]") {
   constexpr uint64_t Capacity = 3UL;
   SECTION("Default Constructor") {
     FixedCapacityVector<uint64_t, Capacity> vector;
@@ -194,7 +194,7 @@ TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
   REQUIRE(ThreadLocalLifetimeTracker::num_destructions() == 6);
 }
 
-TEST_CASE("FixedCapacityVector: Element Accessors", "[Containers]") {
+TEST_CASE("FixedCapacityVector: Element Accessors", "[containers]") {
   SECTION("at()") {
     SECTION("mutable vector") {
       FixedCapacityVector<uint64_t, 3UL> vector = {1UL, 2UL};
@@ -227,7 +227,7 @@ TEST_CASE("FixedCapacityVector: Element Accessors", "[Containers]") {
   }
 }
 
-TEST_CASE("FixedCapacityVector: Iterators", "[Containers][Iterators]") {
+TEST_CASE("FixedCapacityVector: Iterators", "[containers][iterators]") {
   SECTION("Forward Iteration") {
     SECTION("Mutable Vector") {
       FixedCapacityVector<uint64_t, 3UL> vector = {1UL, 2UL, 3UL};
@@ -301,7 +301,7 @@ TEST_CASE("FixedCapacityVector: Iterators", "[Containers][Iterators]") {
 }
 
 TEST_CASE("FixedCapacityVector: Modification Through Iterators",
-          "[Containers][Iterators]") {
+          "[containers][iterators]") {
   FixedCapacityVector<uint64_t, 3UL> vector = {1UL, 2UL, 3UL};
   std::transform(vector.begin(), vector.end(), vector.begin(),
                  [](uint64_t value) { return value * 2; });
