@@ -119,34 +119,3 @@ TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture, "OwningPointer: release") {
   delete tracker;
   REQUIRE(ThreadLocalLifetimeTracker::num_destructions() == 0);
 }
-
-// using CppPlayground::OwningPointer;
-// using CppPlayground::Testing::ThreadLocalLifetimeTracker;
-// using CppPlayground::Testing::ThreadLocalLifetimeTrackerFixture;
-
-// TEST_CASE("OwningPointer: lifetime management",
-//           "[memory]") {
-//   ThreadLocalLifetimeTrackerFixture fixture;
-
-//   SECTION("Custom deleter is used") {
-//     bool deleter_called = false;
-//     auto custom_deleter =
-//         [&deleter_called](ThreadLocalLifetimeTracker *p) {
-//           delete p;
-//           deleter_called = true;
-//         };
-
-//     {
-//       OwningPointer<ThreadLocalLifetimeTracker, decltype(custom_deleter)>
-//       ptr(
-//           new ThreadLocalLifetimeTracker(), custom_deleter);
-//       REQUIRE(ThreadLocalLifetimeTracker::num_constructions() == 1);
-//       REQUIRE(ThreadLocalLifetimeTracker::num_destructions() == 0);
-//       REQUIRE_FALSE(deleter_called);
-//     }
-
-//     REQUIRE(ThreadLocalLifetimeTracker::num_constructions() == 1);
-//     REQUIRE(ThreadLocalLifetimeTracker::num_destructions() == 1);
-//     REQUIRE(deleter_called);
-//   }
-// }
