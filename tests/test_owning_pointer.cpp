@@ -108,14 +108,16 @@ TEST_CASE("OwningPointer: dereference", "[memory]") {
 }
 
 TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture, "OwningPointer: release") {
+    ThreadLocalLifetimeTracker* tracker = nullptr;
   {
     OwningPointer<ThreadLocalLifetimeTracker> ptr(
         new ThreadLocalLifetimeTracker());
     REQUIRE(ThreadLocalLifetimeTracker::num_constructions() == 1);
-    ptr.release();
-    REQUIRE(ThreadLocalLifetimeTracker::num_destructions() == 1);
+    tracker =ptr.release();
   }
-  REQUIRE(ThreadLocalLifetimeTracker::num_destructions() == 1);
+  REQUIRE(ThreadLocalLifetimeTracker::num_destructions() == 0);
+  delete tracker;
+  REQUIRE(ThreadLocalLifetimeTracker::num_destructions() == 0);
 }
 
 // using CppPlayground::OwningPointer;

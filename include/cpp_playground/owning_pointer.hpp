@@ -25,6 +25,7 @@ public:
   using ElementType = std::remove_extent_t<T>;
   /** @brief The type of the deleter. */
   using DeleterType = std::remove_reference_t<D>;
+  using RawPointer = ElementType *;
 
 private:
   [[no_unique_address]] DeleterType m_deleter;
@@ -44,14 +45,14 @@ public:
    * pointer.
    * @param ptr A pointer to the object to manage.
    */
-  constexpr explicit OwningPointer(ElementType *ptr) noexcept;
+  constexpr explicit OwningPointer(RawPointer ptr) noexcept;
   /**
    * @brief Constructs a new OwningPointer that takes ownership of a raw
    * pointer and uses a provided deleter.
    * @param ptr A pointer to the object to manage.
    * @param deleter A reference to the deleter to use.
    */
-  constexpr explicit OwningPointer(ElementType *ptr,
+  constexpr explicit OwningPointer(RawPointer ptr,
                                    const DeleterType &deleter) noexcept;
   /**
    * @brief Constructs a new OwningPointer that takes ownership of a raw
@@ -59,7 +60,7 @@ public:
    * @param ptr A pointer to the object to manage.
    * @param deleter An rvalue reference to the deleter to use.
    */
-  constexpr explicit OwningPointer(ElementType *ptr,
+  constexpr explicit OwningPointer(RawPointer ptr,
                                    DeleterType &&deleter) noexcept;
 
   OwningPointer(const OwningPointer &) = delete;
@@ -103,7 +104,7 @@ public:
    * @brief Gets the raw pointer to the managed object.
    * @return The raw pointer.
    */
-  constexpr ElementType *get() const noexcept;
+  constexpr RawPointer get() const noexcept;
   /**
    * @brief Gets a reference to the deleter.
    * @return A reference to the deleter.
@@ -115,10 +116,13 @@ public:
    */
   constexpr const DeleterType &deleter() const noexcept;
   /**
-   * @brief Deallocates the managed object, if any, and sets the internal
-   * pointer to nullptr.
+   * @brief Releases ownership of the managed object.
+   * @details Returns the raw pointer to the managed object and sets the
+   * OwningPointer to a nullptr. The caller is responsible for deallocating the
+   * object.
+   * @return The raw pointer to the managed object.
    */
-  constexpr void release();
+  constexpr RawPointer release() noexcept;
 
   /**
    * @brief Dereferences the pointer to the managed object.
@@ -129,7 +133,7 @@ public:
    * @brief Dereferences the pointer to the managed object.
    * @return The raw pointer to the managed object.
    */
-  constexpr ElementType *operator->() const noexcept;
+  constexpr RawPointer operator->() const noexcept;
 };
 
 template <typename T, typename D>
@@ -141,7 +145,7 @@ constexpr OwningPointer<T, D>::OwningPointer(std::nullptr_t) noexcept
     : m_deleter{}, m_ptr{nullptr} {}
 
 template <typename T, typename D>
-constexpr OwningPointer<T, D>::OwningPointer(ElementType *ptr) noexcept
+constexpr OwningPointer<T, D>::OwningPointer(RawPointer ptr) noexcept
     : m_deleter{}, m_ptr{ptr} {}
 
 template <typename T, typename D>
@@ -150,7 +154,7 @@ constexpr OwningPointer<T, D>::OwningPointer(
     : m_deleter(deleter), m_ptr{ptr} {}
 
 template <typename T, typename D>
-constexpr OwningPointer<T, D>::OwningPointer(ElementType *ptr,
+constexpr OwningPointer<T, D>::OwningPointer(RawPointer ptr,
                                              DeleterType &&deleter) noexcept
     : m_deleter(std::move(deleter)), m_ptr{ptr} {}
 
@@ -169,8 +173,7 @@ OwningPointer<T, D>::~OwningPointer() noexcept(
 }
 
 template <typename T, typename D>
-OwningPointer<T, D> &
-OwningPointer<T, D>::operator=(OwningPointer &&other) {
+OwningPointer<T, D> &OwningPointer<T, D>::operator=(OwningPointer &&other) {
   if (this == &other) {
     return *this;
   }
@@ -212,12 +215,11 @@ OwningPointer<T, D>::deleter() const noexcept {
 }
 
 template <typename T, typename D>
-constexpr void OwningPointer<T, D>::release() {
-  if (m_ptr == nullptr) {
-    return;
-  }
-  m_deleter(m_ptr);
+constexpr typename OwningPointer<T, D>::RawPointer
+OwningPointer<T, D>::release() noexcept {
+  T *raw_ptr = m_ptr;
   m_ptr = nullptr;
+  return raw_ptr;
 }
 
 template <typename T, typename D>
@@ -227,7 +229,7 @@ OwningPointer<T, D>::operator*() const noexcept {
 }
 
 template <typename T, typename D>
-constexpr typename OwningPointer<T, D>::ElementType *
+constexpr typename OwningPointer<T, D>::RawPointer
 OwningPointer<T, D>::operator->() const noexcept {
   return m_ptr;
 }
