@@ -177,11 +177,11 @@ OwningPointer<T, D> &OwningPointer<T, D>::operator=(OwningPointer &&other) {
   if (this == &other) {
     return *this;
   }
+  m_deleter = std::move(other.m_deleter);
   if (m_ptr != nullptr) {
     m_deleter(m_ptr);
     m_ptr = nullptr;
   }
-  m_deleter = std::move(other.m_deleter);
   m_ptr = other.m_ptr;
   other.m_ptr = nullptr;
   return *this;
