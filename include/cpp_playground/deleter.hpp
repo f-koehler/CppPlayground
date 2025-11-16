@@ -2,43 +2,26 @@
 #define CPPPLAYGROUND_DELETER_HPP
 
 #include <concepts>
-#include <cstddef>
+#include <utility>
 #include <type_traits>
 
 namespace CppPlayground {
-template <typename Deleter>
-concept IsDeleter = std::is_default_constructible_v<Deleter> &&
-                    requires(Deleter deleter, void *vptr) {
-                      { deleter(vptr) } -> std::same_as<void>;
-                    };
 
-// NOLINTBEGIN(cppcoreguidelines-owning-memory)
-template <typename T> struct DefaultDelete {
-  virtual void operator()(void *ptr) { delete (T *)ptr; }
+namespace Detail {
+template <typename Scalar> struct ScalarDeleter {
+  using Pointer = Scalar *;
+  constexpr void operator()(Pointer ptr) const noexcept { delete ptr; }
 };
-
-template <typename T> struct DefaultDeleteArray {
-  virtual void operator()(void *ptr) { delete[] (T *)ptr; }
+template <typename Scalar> struct ArrayDeleter {
+  using Pointer = Scalar *;
+  constexpr void operator()(Pointer ptr) const noexcept { delete[] ptr; }
 };
-// NOLINTEND(cppcoreguidelines-owning-memory)
+} // namespace Detail
 
-template <IsDeleter Deleter> class CountingDelete : Deleter {
-public:
-  using BaseDeleter = Deleter;
-
-private:
-  std::size_t m_count = 0;
-
-public:
-  virtual void operator()(void *ptr) {
-    BaseDeleter::operator()(ptr);
-    ++m_count;
-  }
-
-  [[nodiscard]] constexpr std::size_t get_count() const noexcept {
-    return m_count;
-  }
-};
+template <typename T>
+using DefaultDeleter =
+    std::conditional_t<std::is_array_v<T>, Detail::ArrayDeleter<std::remove_extent_t<T>>,
+                       Detail::ScalarDeleter<T>>;
 
 } // namespace CppPlayground
 
