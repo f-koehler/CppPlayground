@@ -132,7 +132,8 @@ public:
  * ensuring a clean state for each test or test section that uses it. It is
  * non-copyable to prevent accidental misuse.
  */
-struct ThreadLocalLifetimeTrackerFixture {
+class ThreadLocalLifetimeTrackerFixture {
+public:
   /**
    * @brief Resets the `ThreadLocalLifetimeTracker` counters.
    */
