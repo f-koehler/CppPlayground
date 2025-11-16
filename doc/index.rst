@@ -19,6 +19,10 @@ documentation for details.
    :project: CppPlayground
    :members:
 
+.. doxygenclass:: CppPlayground::OwningPointer
+   :project: CppPlayground
+   :members:
+
 .. doxygenclass:: CppPlayground::Testing::ThreadLocalLifetimeTracker
    :project: CppPlayground
    :members:
