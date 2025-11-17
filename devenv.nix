@@ -21,6 +21,8 @@ in
     pkgs.vcpkg
     pkgs.cmake
     pkgs.gdb
+    pkgs.doxygen
+    pkgs.uv
     gccPackage
     clangPackage
   ];
