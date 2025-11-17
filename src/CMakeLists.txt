@@ -1,4 +1,7 @@
 add_executable(allocation_sizes allocation_sizes.cpp)
+add_executable(crtp crtp.cpp)
+add_executable(crtp_cpp23 crtp.cpp)
+target_compile_definitions(crtp_cpp23 PRIVATE CPP23_VERSION)
 
 find_package(CLI11 CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
