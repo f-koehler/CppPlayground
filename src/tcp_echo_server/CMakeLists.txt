@@ -13,7 +13,7 @@ check_symbol_exists(htons "arpa/inet.h" HAVE_FUN_HTONS)
 check_symbol_exists(close "unistd.h" HAVE_FUN_CLOSE)
 
 add_executable(tcp_echo_server server.cpp)
-target_link_libraries(tcp_echo_server PRIVATE CLI11::CLI11 spdlog::spdlog)
+target_link_libraries(tcp_echo_server PRIVATE CppPlayground CLI11::CLI11 spdlog::spdlog)
 
 add_executable(tcp_echo_client client.cpp)
-target_link_libraries(tcp_echo_client PRIVATE CLI11::CLI11 spdlog::spdlog)
+target_link_libraries(tcp_echo_client PRIVATE CppPlayground CLI11::CLI11 spdlog::spdlog)
