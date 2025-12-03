@@ -1,0 +1,2 @@
+add_executable(bm_fixed_capacity_vector bm_fixed_capacity_vector.cpp)
+target_link_libraries(bm_fixed_capacity_vector PRIVATE CppPlayground benchmark::benchmark benchmark::benchmark_main)
