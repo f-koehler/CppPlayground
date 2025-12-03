@@ -46,7 +46,7 @@ public:
   static constexpr SizeType ElementSize = sizeof(ValueType);
 
 private:
-  alignas(ValueType) unsigned char m_buffer[Capacity * ElementSize] = {0U};
+  alignas(ValueType) unsigned char m_buffer[Capacity * ElementSize];
   T *m_data = (T *)m_buffer;
   SizeType m_size = 0UL;
 

@@ -122,7 +122,7 @@ TEST_CASE_METHOD(
     "[containers]") {
   constexpr uint64_t Capacity = 3UL;
   {
-    const FixedCapacityVector<ThreadLocalLifetimeTracker, Capacity> vector;
+    FixedCapacityVector<ThreadLocalLifetimeTracker, Capacity> vector;
     REQUIRE(vector.size() == 0UL);
     REQUIRE(vector.capacity() == Capacity);
     REQUIRE(vector.is_empty());
