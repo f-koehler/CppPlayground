@@ -10,10 +10,12 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <cpp_playground/error_handling/expected.hpp>
+#include <atomic>
 
 using namespace CppPlayground;
 static constexpr uint16_t DefaultPort = 2804;
 static constexpr int DefaultListenBacklog = 20;
+std::atomic<bool> stop_flag{false};
 
 int main()
 {
@@ -30,9 +32,12 @@ int main()
 
     ::sockaddr_in client_address = {};
     ::socklen_t client_address_length = sizeof(client_address);
-    const auto client_socket = ErrorHandling::expect(server_socket.accept(client_address, client_address_length));
-    std::println("Accepted connection from {}", client_address);
 
+    while (!stop_flag.load())
+    {
+        const auto client_socket = ErrorHandling::expect(server_socket.accept(client_address, client_address_length));
+        std::println("Accepted connection from {}", client_address);
+    }
 
     return EXIT_SUCCESS;
 }
