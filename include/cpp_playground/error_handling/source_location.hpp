@@ -11,10 +11,10 @@ inline auto format_source_location(
   const char *function_name = location.function_name();
   assert(function_name != nullptr);
   if (function_name[0] == '\0') {
-    return std::format("{}({}:{}):", location.file_name(), location.line(),
+    return std::format("{}({}:{})", location.file_name(), location.line(),
                        location.column());
   }
-  return std::format("{}({}:{}) `{}`:", location.file_name(), location.line(),
+  return std::format("{}({}:{}) `{}`", location.file_name(), location.line(),
                      location.column(), function_name);
 }
 } // namespace CppPlayground::ErrorHandling
