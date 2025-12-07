@@ -11,14 +11,26 @@
 #include <unistd.h>
 #include <cpp_playground/error_handling/expected.hpp>
 #include <atomic>
+#include <csignal>
 
 using namespace CppPlayground;
 static constexpr uint16_t DefaultPort = 2804;
 static constexpr int DefaultListenBacklog = 20;
 std::atomic<bool> stop_flag{false};
 
+void handle_signals([[maybe_unused]] int signal_id)
+{
+    stop_flag.store(true);
+}
+
 int main()
 {
+    if ((std::signal(SIGINT, handle_signals) == SIG_ERR) || (std::signal(SIGTERM, handle_signals) == SIG_ERR))
+    {
+        std::println("{}: failed to setup signal handlers", ErrorHandling::format_source_location());
+        return EXIT_FAILURE;
+    }
+
     ::sockaddr_in server_address = {};
     server_address.sin_port = ::htons(DefaultPort);
     server_address.sin_family = AF_INET;
