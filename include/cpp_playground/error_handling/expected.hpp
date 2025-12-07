@@ -15,7 +15,10 @@ namespace CppPlayground::ErrorHandling
             std::println("{}", expected.error());
             std::terminate();
         }
-        return std::move(expected.value());
+        if constexpr (!std::is_same_v<void,T>)
+        {
+            return std::move(expected.value());
+        }
     }
 }
 
