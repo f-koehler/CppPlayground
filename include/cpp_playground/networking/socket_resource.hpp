@@ -60,7 +60,8 @@ namespace CppPlayground::Networking
                                                    ErrorHandling::format_source_location(),
                                                    ErrorHandling::get_error_message(errno)));
             }
-            return SocketResource(socket_fd);
+            return ErrorHandling::Ok(SocketResource(socket_fd));
+            // return SocketResource(socket_fd);
         }
 
         SocketResource(const SocketResource&) = delete;
@@ -112,9 +113,9 @@ namespace CppPlayground::Networking
         {
             if (::bind(m_socket_fd, (const ::sockaddr*)&address, sizeof(Address)) != 0)
             {
-                return std::unexpected(std::format("{}: failed to bind socket: {}",
-                                                   ErrorHandling::format_source_location(),
-                                                   ErrorHandling::get_error_message(errno)));
+                return ErrorHandling::Err(std::format("{}: failed to bind socket: {}",
+                                                      ErrorHandling::format_source_location(),
+                                                      ErrorHandling::get_error_message(errno)));
             }
             return {};
         }
@@ -124,9 +125,9 @@ namespace CppPlayground::Networking
         {
             if (::connect(m_socket_fd, (const ::sockaddr*)&address, sizeof(Address)) != 0)
             {
-                return std::unexpected(std::format("{}: failed to connect socket: {}",
-                                                   ErrorHandling::format_source_location(),
-                                                   ErrorHandling::get_error_message(errno)));
+                return ErrorHandling::Err(std::format("{}: failed to connect socket: {}",
+                                                      ErrorHandling::format_source_location(),
+                                                      ErrorHandling::get_error_message(errno)));
             }
             return {};
         }
@@ -135,9 +136,9 @@ namespace CppPlayground::Networking
         {
             if (::listen(m_socket_fd, backlog_size) != 0)
             {
-                return std::unexpected(std::format("{}: failed to listen socket: {}",
-                                                   ErrorHandling::format_source_location(),
-                                                   ErrorHandling::get_error_message(errno)));
+                return ErrorHandling::Err(std::format("{}: failed to listen socket: {}",
+                                                      ErrorHandling::format_source_location(),
+                                                      ErrorHandling::get_error_message(errno)));
             }
             return {};
         }
@@ -150,11 +151,11 @@ namespace CppPlayground::Networking
             int client_socket = ::accept(m_socket_fd, (::sockaddr*)&address, &address_length);
             if (client_socket == -1)
             {
-                return std::unexpected(std::format("{}: failed to accept connection: {}",
-                                                   ErrorHandling::format_source_location(),
-                                                   ErrorHandling::get_error_message(errno)));
+                return ErrorHandling::Err(std::format("{}: failed to accept connection: {}",
+                                                      ErrorHandling::format_source_location(),
+                                                      ErrorHandling::get_error_message(errno)));
             }
-            return SocketResource(client_socket);
+            return ErrorHandling::Ok(SocketResource(client_socket));
         }
     };
 } // namespace CppPlayground::Networking
