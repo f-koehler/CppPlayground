@@ -82,6 +82,54 @@ namespace CppPlayground::Networking
         }
 
         [[nodiscard]] int get() const { return m_socket_fd; }
+
+        template <typename Address>
+        [[nodiscard]] auto bind(const Address& address) const -> std::expected<void, std::string>
+        {
+            if (::bind(m_socket_fd, (const ::sockaddr*)&address, sizeof(Address)) != 0)
+            {
+                return std::unexpected(std::format("{}: failed to bind socket: {}",
+                                                   ErrorHandling::format_source_location(),
+                                                   ErrorHandling::get_error_message(errno)));
+            }
+            return {};
+        }
+
+        template <typename Address>
+        [[nodiscard]] auto connect(const Address& address) const -> std::expected<void, std::string>
+        {
+            if (::connect(m_socket_fd, (const ::sockaddr*)&address, sizeof(Address)) != 0)
+            {
+                return std::unexpected(std::format("{}: failed to connect socket: {}",
+                                                   ErrorHandling::format_source_location(),
+                                                   ErrorHandling::get_error_message(errno)));
+            }
+            return {};
+        }
+
+        [[nodiscard]] auto listen(const int backlog_size) const -> std::expected<void, std::string>
+        {
+            if (::listen(m_socket_fd, backlog_size) != 0)
+            {
+                return std::unexpected(std::format("{}: failed to listen socket: {}",
+                                                   ErrorHandling::format_source_location(),
+                                                   ErrorHandling::get_error_message(errno)));
+            }
+            return {};
+        }
+
+        template <typename Address>
+        [[nodiscard]] auto accept(Address& address, ::socklen_t& address_length) const -> std::expected<SocketResource, std::string>
+        {
+            int client_socket = ::accept(m_socket_fd, (::sockaddr*)&address, &address_length);
+            if (client_socket == -1)
+            {
+                return std::unexpected(std::format("{}: failed to accept connection: {}",
+                                                   ErrorHandling::format_source_location(),
+                                                   ErrorHandling::get_error_message(errno)));
+            }
+            return SocketResource(client_socket);
+        }
     };
 } // namespace CppPlayground::Networking
 
