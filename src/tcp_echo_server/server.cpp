@@ -36,18 +36,16 @@ int main()
     server_address.sin_family = AF_INET;
     server_address.sin_addr.s_addr = INADDR_ANY;
 
-    const auto server_socket = ErrorHandling::expect(
-        Networking::SocketResource::create_socket(
-            AF_INET, SOCK_STREAM, 0));
-    ErrorHandling::expect(server_socket.bind(server_address));
-    ErrorHandling::expect(server_socket.listen(DefaultListenBacklog));
+    const auto server_socket = Networking::SocketResource::create_socket(AF_INET, SOCK_STREAM, 0).expect();
+    server_socket.bind(server_address).expect();
+    server_socket.listen(DefaultListenBacklog).expect();
 
     ::sockaddr_in client_address = {};
     ::socklen_t client_address_length = sizeof(client_address);
 
     while (!stop_flag.load())
     {
-        const auto client_socket = ErrorHandling::expect(server_socket.accept(client_address, client_address_length));
+        const auto client_socket = server_socket.accept(client_address, client_address_length).expect();
         std::println("Accepted connection from {}", client_address);
     }
 

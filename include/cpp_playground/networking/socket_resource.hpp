@@ -4,6 +4,7 @@
 #include <expected>
 #include <cpp_playground/error_handling/error_code.hpp>
 #include <cpp_playground/error_handling/source_location.hpp>
+#include <cpp_playground/error_handling/result.hpp>
 #include <print>
 #include <format>
 #include <sys/socket.h>
@@ -34,7 +35,6 @@ struct std::formatter<::sockaddr_in>
 
 namespace CppPlayground::Networking
 {
-
     class SocketResource
     {
     private:
@@ -45,13 +45,13 @@ namespace CppPlayground::Networking
         }
 
     public:
-        static auto manage_socket(const int socket_fd) -> std::expected<SocketResource, std::string>
+        static auto manage_socket(const int socket_fd) -> ErrorHandling::Result<SocketResource, std::string>
         {
             return SocketResource(socket_fd);
         }
 
         static auto create_socket(const int domain, const int type,
-                                  const int protocol) -> std::expected<SocketResource, std::string>
+                                  const int protocol) -> ErrorHandling::Result<SocketResource, std::string>
         {
             const int socket_fd = ::socket(domain, type, protocol);
             if (socket_fd == -1)
@@ -108,7 +108,7 @@ namespace CppPlayground::Networking
         [[nodiscard]] int get() const { return m_socket_fd; }
 
         template <typename Address>
-        [[nodiscard]] auto bind(const Address& address) const -> std::expected<void, std::string>
+        [[nodiscard]] auto bind(const Address& address) const -> ErrorHandling::Result<void, std::string>
         {
             if (::bind(m_socket_fd, (const ::sockaddr*)&address, sizeof(Address)) != 0)
             {
@@ -120,7 +120,7 @@ namespace CppPlayground::Networking
         }
 
         template <typename Address>
-        [[nodiscard]] auto connect(const Address& address) const -> std::expected<void, std::string>
+        [[nodiscard]] auto connect(const Address& address) const -> ErrorHandling::Result<void, std::string>
         {
             if (::connect(m_socket_fd, (const ::sockaddr*)&address, sizeof(Address)) != 0)
             {
@@ -131,7 +131,7 @@ namespace CppPlayground::Networking
             return {};
         }
 
-        [[nodiscard]] auto listen(const int backlog_size) const -> std::expected<void, std::string>
+        [[nodiscard]] auto listen(const int backlog_size) const -> ErrorHandling::Result<void, std::string>
         {
             if (::listen(m_socket_fd, backlog_size) != 0)
             {
@@ -144,7 +144,8 @@ namespace CppPlayground::Networking
 
         template <typename Address>
         [[nodiscard]] auto accept(Address& address,
-                                  ::socklen_t& address_length) const -> std::expected<SocketResource, std::string>
+                                  ::socklen_t& address_length) const -> ErrorHandling::Result<
+            SocketResource, std::string>
         {
             int client_socket = ::accept(m_socket_fd, (::sockaddr*)&address, &address_length);
             if (client_socket == -1)
