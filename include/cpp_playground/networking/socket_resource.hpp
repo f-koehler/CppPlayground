@@ -7,10 +7,34 @@
 #include <print>
 #include <format>
 #include <sys/socket.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
 #include <unistd.h>
+
+template <>
+struct std::formatter<::sockaddr_in>
+{
+    constexpr auto parse([[maybe_unused]] std::format_parse_context& ctx)
+    {
+        // TODO: not implemented yet
+        return ctx.begin();
+    }
+
+    auto format(const ::sockaddr_in& addr, std::format_context& ctx) const noexcept
+    {
+        thread_local static std::array<char, INET_ADDRSTRLEN> ip_address = {0};
+        if (::inet_ntop(AF_INET, &addr.sin_addr, ip_address.data(), ip_address.size()) == nullptr)
+        {
+            return std::format_to(ctx.out(), "<invalid_ipv4>");
+        }
+        uint16_t port = ntohs(addr.sin_port);
+        return std::format_to(ctx.out(), "{}:{}", ip_address.data(), port);
+    }
+};
 
 namespace CppPlayground::Networking
 {
+
     class SocketResource
     {
     private:
@@ -119,7 +143,8 @@ namespace CppPlayground::Networking
         }
 
         template <typename Address>
-        [[nodiscard]] auto accept(Address& address, ::socklen_t& address_length) const -> std::expected<SocketResource, std::string>
+        [[nodiscard]] auto accept(Address& address,
+                                  ::socklen_t& address_length) const -> std::expected<SocketResource, std::string>
         {
             int client_socket = ::accept(m_socket_fd, (::sockaddr*)&address, &address_length);
             if (client_socket == -1)

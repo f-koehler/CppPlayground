@@ -31,8 +31,7 @@ int main()
     ::sockaddr_in client_address = {};
     ::socklen_t client_address_length = sizeof(client_address);
     const auto client_socket = ErrorHandling::expect(server_socket.accept(client_address, client_address_length));
-    std::println("Accepted connection from {}:{}", client_address.sin_addr.s_addr,
-                 client_address.sin_port);
+    std::println("Accepted connection from {}", client_address);
 
 
     return EXIT_SUCCESS;
