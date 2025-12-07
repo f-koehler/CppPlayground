@@ -9,20 +9,17 @@
 #include <print>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <cpp_playground/error_handling/expected.hpp>
 
+using namespace CppPlayground;
 static constexpr uint16_t DefaultPort = 2804;
 static constexpr int DefaultListenBacklog = 20;
 
 int main()
 {
-    CppPlayground::Networking::SocketResource server_socket(
-        socket(AF_INET, SOCK_STREAM, 0));
-    if (server_socket.get() == -1)
-    {
-        std::println("{}: failed to create socket: {}", CppPlayground::ErrorHandling::format_source_location(),
-                     CppPlayground::ErrorHandling::get_error_message(errno));
-        return EXIT_FAILURE;
-    }
+    const auto server_socket = ErrorHandling::expect(
+        Networking::SocketResource::create_socket(
+            AF_INET, SOCK_STREAM, 0));
 
     ::sockaddr_in server_address = {};
     server_address.sin_port = ::htons(DefaultPort);
@@ -54,20 +51,9 @@ int main()
                      CppPlayground::ErrorHandling::get_error_message(errno));
         return EXIT_FAILURE;
     }
-    std::println("Accepted connection from {}:{}\n", client_address.sin_addr.s_addr,
-               client_address.sin_port);
+    std::println("Accepted connection from {}:{}", client_address.sin_addr.s_addr,
+                 client_address.sin_port);
 
-    if (::close(client_socket) != 0)
-    {
-        std::println("{}: failed to close client socket: {}", CppPlayground::ErrorHandling::format_source_location(),
-                     CppPlayground::ErrorHandling::get_error_message(errno));
-    }
-    if (::close(server_socket.get()) != 0)
-    {
-        std::println("{}: failed to close server socket: {}", CppPlayground::ErrorHandling::format_source_location(),
-                     CppPlayground::ErrorHandling::get_error_message(errno));
-        return EXIT_FAILURE;
-    }
 
     return EXIT_SUCCESS;
 }
