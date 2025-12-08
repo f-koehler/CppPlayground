@@ -2,6 +2,7 @@
 #define CPP_PLAYGROUND_RESULT_HPP
 
 #include <expected>
+#include <exception>
 #include <print>
 
 namespace CppPlayground::ErrorHandling
