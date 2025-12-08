@@ -378,7 +378,7 @@ constexpr FixedCapacityVector<T, C>::FixedCapacityVector(
   for (SizeType i = 0; i < other.m_size; ++i) {
     new (&m_data[i]) T(std::move(other.m_data[i]));
     ++m_size;
-    other.m_data[i].~T();
+    std::destroy_at(std::addressof(m_data[i]));
   }
   other.m_size = 0;
 }
@@ -406,7 +406,7 @@ constexpr FixedCapacityVector<T, C>::FixedCapacityVector(
   for (SizeType i = 0; i < other.size(); ++i) {
     new (&m_data[i]) T(std::move(other.data()[i]));
     ++m_size;
-    other.data()[i].~T();
+    std::destroy_at(std::addressof(m_data[i]));
   }
   other.clear();
 }
@@ -425,9 +425,7 @@ constexpr FixedCapacityVector<T, C> &FixedCapacityVector<T, C>::operator=(
     throw std::length_error("FixedCapacityVector: Attempt to copy from a "
                             "vector with more elements than capacity");
   }
-  for (SizeType i = 0; i < m_size; ++i) {
-    m_data[i].~T();
-  }
+  std::destroy(m_data, m_data + m_size);
   m_size = 0;
   for (SizeType i = 0; i < other.m_size; ++i) {
     new (&m_data[i]) T(other.m_data[i]);
@@ -447,7 +445,7 @@ constexpr FixedCapacityVector<T, C> &FixedCapacityVector<T, C>::operator=(
   for (SizeType i = 0; i < other.m_size; ++i) {
     new (&m_data[i]) T(std::move(other.m_data[i]));
     ++m_size;
-    other.m_data[i].~T();
+    std::destroy_at(std::addressof(m_data[i]));
   }
   other.m_size = 0;
   return *this;
@@ -571,12 +569,8 @@ constexpr void FixedCapacityVector<T, C>::clear() noexcept {
     return;
   }
 
-  if constexpr (!std::is_trivially_destructible_v<T>) {
-    // destruct all constructed objects
-    for (SizeType i = 0; i < m_size; ++i) {
-      m_data[i].~T();
-    }
-  }
+  // destruct all constructed objects
+  std::destroy(m_data, m_data + m_size);
   m_size = 0;
 }
 
@@ -616,7 +610,7 @@ constexpr void FixedCapacityVector<T, C>::pop_back() {
     throw std::out_of_range("FixedCapacityVector: Attempt to pop back "
                             "element of empty vector");
   }
-  m_data[--m_size].~T();
+  std::destroy_at(std::addressof(m_data[--m_size]));
 }
 
 template <typename T, std::size_t C>
