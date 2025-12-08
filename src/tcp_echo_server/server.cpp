@@ -32,7 +32,7 @@ int main()
     }
 
     ::sockaddr_in server_address = {};
-    server_address.sin_port = ::htons(DefaultPort);
+    server_address.sin_port = htons(DefaultPort);
     server_address.sin_family = AF_INET;
     server_address.sin_addr.s_addr = INADDR_ANY;
 
