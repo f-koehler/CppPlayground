@@ -276,6 +276,16 @@ public:
    */
   constexpr void pop_back();
 
+  constexpr Iterator erase(Iterator position) noexcept(
+      std::is_nothrow_move_assignable_v<ValueType>);
+  constexpr Iterator erase(ConstIterator position) noexcept(
+      std::is_nothrow_move_assignable_v<ValueType>);
+  constexpr Iterator
+  erase(Iterator first,
+        Iterator last) noexcept(std::is_nothrow_move_assignable_v<ValueType>);
+  constexpr Iterator erase(ConstIterator first, ConstIterator last) noexcept(
+      std::is_nothrow_move_assignable_v<ValueType>);
+
   /**
    * @brief Returns an iterator to the beginning of the vector.
    * @return An iterator to the first element.
@@ -617,6 +627,55 @@ constexpr void FixedCapacityVector<T, C>::pop_back() {
                             "element of empty vector");
   }
   m_data[--m_size].~T();
+}
+
+template <typename T, std::size_t C>
+constexpr FixedCapacityVector<T, C>::Iterator FixedCapacityVector<T, C>::erase(
+    FixedCapacityVector<T, C>::Iterator
+        position) noexcept(std::is_nothrow_move_assignable_v<T>) {
+  return erase(position, position + 1);
+}
+
+template <typename T, std::size_t C>
+constexpr FixedCapacityVector<T, C>::Iterator FixedCapacityVector<T, C>::erase(
+    FixedCapacityVector<T, C>::ConstIterator
+        position) noexcept(std::is_nothrow_move_assignable_v<T>) {
+  return erase(position, position + 1);
+}
+
+template <typename T, std::size_t C>
+constexpr typename FixedCapacityVector<T, C>::Iterator
+FixedCapacityVector<T, C>::erase(
+    typename FixedCapacityVector<T, C>::Iterator first,
+    typename FixedCapacityVector<T, C>::Iterator
+        last) noexcept(std::is_nothrow_move_assignable_v<T>) {
+  Iterator dst = first;
+  Iterator src = last;
+  std::destroy(first, last);
+
+  if (src != end()) {
+    // move the tail forward
+    std::move(src, end(), dst);
+  }
+
+  // remove elements from the end
+  const std::size_t num_remove = last - first;
+  std::destroy(end() - num_remove, end());
+  m_size -= num_remove;
+
+  return dst;
+}
+
+template <typename T, std::size_t C>
+constexpr typename FixedCapacityVector<T, C>::Iterator
+FixedCapacityVector<T, C>::erase(
+    typename FixedCapacityVector<T, C>::ConstIterator first,
+    typename FixedCapacityVector<T, C>::ConstIterator
+        last) noexcept(std::is_nothrow_move_assignable_v<T>) {
+  // Since our iterators are just raw pointers, we can cast the const away since
+  // we are dealing with a non-const vector
+  return erase((typename FixedCapacityVector<T, C>::Iterator)first,
+               (typename FixedCapacityVector<T, C>::Iterator)last);
 }
 
 template <typename T, std::size_t C>
