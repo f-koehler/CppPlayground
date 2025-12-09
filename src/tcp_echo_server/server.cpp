@@ -47,6 +47,8 @@ int main()
     {
         const auto client_socket = server_socket.accept(client_address, client_address_length).unwrap();
         std::println("Accepted connection from {}", client_address);
+        const uint64_t message_size = client_socket.read<uint64_t>().unwrap();
+        std::println("Receiving {} byte message", message_size);
     }
 
     return EXIT_SUCCESS;

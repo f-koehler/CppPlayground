@@ -28,5 +28,10 @@ int main()
     const auto client_socket = Networking::SocketResource::create_socket(AF_INET, SOCK_STREAM, 0).unwrap();
     client_socket.connect(server_address).unwrap();
 
+    client_socket.write(uint64_t{42}).unwrap();
+
+    // client_socket.write_exactly(std::span<std::byte>((std::byte*)message.data(), message.size())).unwrap();
+
+
     return EXIT_SUCCESS;
 }
