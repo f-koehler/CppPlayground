@@ -25,8 +25,8 @@ int main()
     server_address.sin_family = AF_INET;
     server_address.sin_addr.s_addr = INADDR_ANY;
 
-    const auto client_socket = Networking::SocketResource::create_socket(AF_INET, SOCK_STREAM, 0).expect();
-    client_socket.connect(server_address).expect();
+    const auto client_socket = Networking::SocketResource::create_socket(AF_INET, SOCK_STREAM, 0).unwrap();
+    client_socket.connect(server_address).unwrap();
 
     return EXIT_SUCCESS;
 }

@@ -13,7 +13,7 @@ namespace CppPlayground::ErrorHandling
     public:
         using std::expected<T, E>::expected;
 
-        constexpr decltype(auto) expect(this auto&& self)
+        constexpr decltype(auto) unwrap(this auto&& self)
         {
             if (!self)
             {
