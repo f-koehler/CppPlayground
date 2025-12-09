@@ -157,6 +157,107 @@ namespace CppPlayground::Networking
             }
             return ErrorHandling::Ok(SocketResource(client_socket));
         }
+
+        template<typename T>
+        [[nodiscard]] auto write(
+            const T& value) const -> ErrorHandling::Result<void, std::string>
+        {
+            constexpr auto size = sizeof(T);
+            const auto bytes_written = ::write(m_socket_fd, &value, sizeof(T));
+            if (bytes_written == -1)
+            {
+                return ErrorHandling::Err(std::format("{}: failed to write to socket: {}",
+                                                      ErrorHandling::format_source_location(),
+                                                      ErrorHandling::get_error_message(errno)));
+            }
+            if (bytes_written != size)
+            {
+                return ErrorHandling::Err(std::format("{}: only wrote {} of {} bytes from socket: {}",
+                                                      ErrorHandling::format_source_location(), bytes_written, size,
+                                                      ErrorHandling::get_error_message(errno)));
+            }
+            return {};
+        }
+
+        [[nodiscard]] auto write(
+            const std::span<std::byte>& data) const -> ErrorHandling::Result<std::size_t, std::string>
+        {
+            const auto bytes_written = ::write(m_socket_fd, data.data(), data.size());
+            if (bytes_written == -1)
+            {
+                return ErrorHandling::Err(std::format("{}: failed to write to socket: {}",
+                                                      ErrorHandling::format_source_location(),
+                                                      ErrorHandling::get_error_message(errno)));
+            }
+            return {static_cast<std::size_t>(bytes_written)};
+        }
+
+        [[nodiscard]] auto write_exactly(
+            const std::span<std::byte>& data) const -> ErrorHandling::Result<void, std::string>
+        {
+            auto result = write(data);
+            if (!result)
+            {
+                return ErrorHandling::Err(std::move(result.error()));
+            }
+            if (*result != data.size())
+            {
+                return ErrorHandling::Err(std::format("{}: only wrote {} of {} bytes to socket: {}",
+                                                      ErrorHandling::format_source_location(), *result, data.size(),
+                                                      ErrorHandling::get_error_message(errno)));
+            }
+            return {};
+        }
+
+
+        template <typename T>
+        [[nodiscard]] auto read() const -> ErrorHandling::Result<T, std::string>
+        {
+            constexpr auto size = sizeof(T);
+            T value;
+            const auto bytes_read = ::read(m_socket_fd, &value, size);
+            if (bytes_read == -1)
+            {
+                return ErrorHandling::Err(std::format("{}: failed to read from socket: {}",
+                                                      ErrorHandling::format_source_location(),
+                                                      ErrorHandling::get_error_message(errno)));
+            }
+            if (bytes_read != size)
+            {
+                return ErrorHandling::Err(std::format("{}: only read {} of {} bytes from socket: {}",
+                                                      ErrorHandling::format_source_location(), bytes_read, size,
+                                                      ErrorHandling::get_error_message(errno)));
+            }
+            return ErrorHandling::Ok(std::move(value));
+        }
+
+        [[nodiscard]] auto read(std::span<std::byte>& data) const -> ErrorHandling::Result<std::size_t, std::string>
+        {
+            const auto bytes_read = ::read(m_socket_fd, data.data(), data.size());
+            if (bytes_read == -1)
+            {
+                return ErrorHandling::Err(std::format("{}: failed to read from socket: {}",
+                                                      ErrorHandling::format_source_location(),
+                                                      ErrorHandling::get_error_message(errno)));
+            }
+            return {static_cast<std::size_t>(bytes_read)};
+        }
+
+        [[nodiscard]] auto read_exactly(std::span<std::byte>& data) -> ErrorHandling::Result<std::size_t, std::string>
+        {
+            auto result = read(data);
+            if (!result)
+            {
+                return ErrorHandling::Err(std::move(result.error()));
+            }
+            if (*result != data.size())
+            {
+                return ErrorHandling::Err(std::format("{}: only read {} of {} bytes from socket: {}",
+                                                      ErrorHandling::format_source_location(), *result, data.size(),
+                                                      ErrorHandling::get_error_message(errno)));
+            }
+            return {};
+        }
     };
 } // namespace CppPlayground::Networking
 
