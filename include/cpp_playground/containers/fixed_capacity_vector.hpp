@@ -457,6 +457,3 @@ public:
   [[nodiscard]] constexpr auto crend() const noexcept { return rend(); }
 };
 
-} // namespace CppPlayground
-
-#endif
