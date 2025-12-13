@@ -445,7 +445,7 @@ constexpr FixedCapacityVector<T, C> &FixedCapacityVector<T, C>::operator=(
   for (SizeType i = 0; i < other.m_size; ++i) {
     new (&m_data[i]) T(std::move(other.m_data[i]));
     ++m_size;
-    std::destroy_at(std::addressof(m_data[i]));
+    std::destroy_at(std::addressof(other.m_data[i]));
   }
   other.m_size = 0;
   return *this;
