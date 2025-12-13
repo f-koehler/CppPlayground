@@ -45,10 +45,13 @@ public:
   /// The size of a single element in bytes.
   static constexpr SizeType ElementSize = sizeof(ValueType);
 
+  static_assert(Capacity > 0);
+
 private:
-  alignas(ValueType) unsigned char m_buffer[Capacity * ElementSize];
-  T *m_data = (T *)m_buffer;
   SizeType m_size = 0UL;
+  // NOLINTBEGIN(*-avoid-c-arrays)
+  alignas(ValueType) std::byte m_buffer[Capacity * ElementSize]{};
+  // NOLINTEND(*-avoid-c-arrays)
 
 public:
   /**
@@ -124,7 +127,8 @@ public:
   template <SizeType OtherCapacity>
   constexpr FixedCapacityVector &
   operator=(const FixedCapacityVector<ValueType, OtherCapacity>
-                &other) noexcept(std::is_nothrow_copy_constructible_v<T>);
+                &other) noexcept(OtherCapacity <= Capacity &&
+                                 std::is_nothrow_copy_assignable_v<ValueType>);
 
   /**
    * @brief Move assignment operator.
@@ -348,10 +352,10 @@ public:
 template <typename T, std::size_t C>
 constexpr FixedCapacityVector<T, C>::FixedCapacityVector(
     const FixedCapacityVector<T, C>
-        &other) noexcept(std::is_nothrow_copy_constructible_v<ValueType>) {
-  m_size = other.m_size;
+        &other) noexcept(std::is_nothrow_copy_constructible_v<ValueType>)
+    : m_size(other.m_size) {
   for (SizeType i = 0; i < other.m_size; ++i) {
-    new (&m_data[i]) T(other.m_data[i]);
+    new (std::addressof(data()[i])) T(other.data()[i]);
   }
 }
 
@@ -359,14 +363,13 @@ template <typename T, std::size_t C>
 template <std::size_t OtherCapacity>
 constexpr FixedCapacityVector<T, C>::FixedCapacityVector(
     const FixedCapacityVector<T, OtherCapacity> &other) {
-
   if (other.size() > C) {
     throw std::length_error("FixedCapacityVector: Attempt to copy from a "
                             "vector with more elements than capacity");
   }
   for (SizeType i = 0; i < other.size(); ++i) {
     // use placement new operator to copy construct objects at the right place
-    new (&m_data[i]) T(other.data()[i]);
+    new (std::addressof(data()[i])) T(other.data()[i]);
     ++m_size;
   }
 }
@@ -376,9 +379,9 @@ constexpr FixedCapacityVector<T, C>::FixedCapacityVector(
     FixedCapacityVector<T, C>
         &&other) noexcept(std::is_nothrow_move_constructible_v<T>) {
   for (SizeType i = 0; i < other.m_size; ++i) {
-    new (&m_data[i]) T(std::move(other.m_data[i]));
+    new (std::addressof(data()[i])) T(std::move(other.data()[i]));
     ++m_size;
-    other.m_data[i].~T();
+    other.data()[i].~T();
   }
   other.m_size = 0;
 }
@@ -391,7 +394,7 @@ constexpr FixedCapacityVector<T, C>::FixedCapacityVector(
                             "more elements than capacity");
   }
   for (const auto &item : init) {
-    new (&m_data[m_size++]) T(item);
+    new (std::addressof(data()[m_size++])) T(item);
   }
 }
 
@@ -404,7 +407,7 @@ constexpr FixedCapacityVector<T, C>::FixedCapacityVector(
                             "vector with more elements than capacity");
   }
   for (SizeType i = 0; i < other.size(); ++i) {
-    new (&m_data[i]) T(std::move(other.data()[i]));
+    new (std::addressof(data()[i])) T(std::move(other.data()[i]));
     ++m_size;
     other.data()[i].~T();
   }
@@ -420,17 +423,18 @@ template <typename T, std::size_t C>
 template <std::size_t OtherCapacity>
 constexpr FixedCapacityVector<T, C> &FixedCapacityVector<T, C>::operator=(
     const FixedCapacityVector<T, OtherCapacity>
-        &other) noexcept(std::is_nothrow_copy_constructible_v<T>) {
+        &other) noexcept(OtherCapacity <= Capacity &&
+                         std::is_nothrow_copy_assignable_v<ValueType>) {
   if (other.m_size > C) {
     throw std::length_error("FixedCapacityVector: Attempt to copy from a "
                             "vector with more elements than capacity");
   }
   for (SizeType i = 0; i < m_size; ++i) {
-    m_data[i].~T();
+    data()[i].~T();
   }
   m_size = 0;
   for (SizeType i = 0; i < other.m_size; ++i) {
-    new (&m_data[i]) T(other.m_data[i]);
+    new (std::addressof(data()[i])) T(other.data()[i]);
     ++m_size;
   }
   return *this;
@@ -445,9 +449,9 @@ constexpr FixedCapacityVector<T, C> &FixedCapacityVector<T, C>::operator=(
   }
   clear();
   for (SizeType i = 0; i < other.m_size; ++i) {
-    new (&m_data[i]) T(std::move(other.m_data[i]));
+    new (std::addressof(data()[i])) T(std::move(other.data()[i]));
     ++m_size;
-    other.m_data[i].~T();
+    other.data()[i].~T();
   }
   other.m_size = 0;
   return *this;
@@ -467,7 +471,7 @@ constexpr void FixedCapacityVector<T, C>::resize(SizeType new_size) {
 }
 
 template <typename T, std::size_t C>
-[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::SizeType
+[[nodiscard]] constexpr FixedCapacityVector<T, C>::SizeType
 FixedCapacityVector<T, C>::size() const noexcept {
   return m_size;
 }
@@ -485,84 +489,90 @@ FixedCapacityVector<T, C>::is_full() const noexcept {
 }
 
 template <typename T, std::size_t C>
-[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ConstReferenceType
+[[nodiscard]] constexpr FixedCapacityVector<T, C>::ConstReferenceType
 FixedCapacityVector<T, C>::front() const {
   if (is_empty()) {
     throw std::out_of_range("FixedCapacityVector: Attempt to access front "
                             "element of empty vector");
   }
-  return *m_data;
+  return *data();
 }
 
 template <typename T, std::size_t C>
-[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ConstReferenceType
+[[nodiscard]] constexpr FixedCapacityVector<T, C>::ConstReferenceType
 FixedCapacityVector<T, C>::back() const {
   if (is_empty()) {
     throw std::out_of_range("FixedCapacityVector: Attempt to access back "
                             "element of empty vector");
   }
-  return m_data[m_size - 1];
+  return data()[m_size - 1];
 }
 
 template <typename T, std::size_t C>
-[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ReferenceType
+[[nodiscard]] constexpr FixedCapacityVector<T, C>::ReferenceType
 FixedCapacityVector<T, C>::front() {
   if (is_empty()) {
     throw std::out_of_range("FixedCapacityVector: Attempt to access front "
                             "element of empty vector");
   }
-  return *m_data;
+  return *data();
 }
 
 template <typename T, std::size_t C>
-[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ReferenceType
+[[nodiscard]] constexpr FixedCapacityVector<T, C>::ReferenceType
 FixedCapacityVector<T, C>::back() {
   if (is_empty()) {
     throw std::out_of_range("FixedCapacityVector: Attempt to access back "
                             "element of empty vector");
   }
-  return m_data[m_size - 1];
+  return data()[m_size - 1];
 }
 
 template <typename T, std::size_t C>
-[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ReferenceType
+[[nodiscard]] constexpr FixedCapacityVector<T, C>::ReferenceType
 FixedCapacityVector<T, C>::at(SizeType index) {
   if (index >= m_size) {
     throw std::out_of_range("FixedCapacityVector: Out of range access");
   }
-  return m_data[index];
+  return data()[index];
 }
 
 template <typename T, std::size_t C>
-[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ReferenceType
+[[nodiscard]] constexpr FixedCapacityVector<T, C>::ReferenceType
 FixedCapacityVector<T, C>::operator[](SizeType index) noexcept {
-  return m_data[index];
+  return data()[index];
 }
 
 template <typename T, std::size_t C>
-[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ConstReferenceType
+[[nodiscard]] constexpr FixedCapacityVector<T, C>::ConstReferenceType
 FixedCapacityVector<T, C>::operator[](SizeType index) const noexcept {
-  return m_data[index];
+  return data()[index];
 }
 
 template <typename T, std::size_t C>
-[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ConstReferenceType
+[[nodiscard]] constexpr FixedCapacityVector<T, C>::ConstReferenceType
 FixedCapacityVector<T, C>::at(SizeType index) const {
   if (index >= m_size) {
     throw std::out_of_range("FixedCapacityVector: Out of range access");
   }
-  return m_data[index];
+  return data()[index];
 }
 
 template <typename T, std::size_t C>
 [[nodiscard]] constexpr T *FixedCapacityVector<T, C>::data() noexcept {
-  return m_data;
+  // NOLINTBEGIN(*-avoid-c-style-cast,*-pro-type-cstyle-cast)
+  // ReSharper disable once CppCStyleCast
+  return (T *)m_buffer;
+  // NOLINTEND(*-avoid-c-style-cast,*-pro-type-cstyle-cast)
 }
 
 template <typename T, std::size_t C>
 [[nodiscard]] constexpr const T *
 FixedCapacityVector<T, C>::data() const noexcept {
-  return m_data;
+  // NOLINTBEGIN(*-avoid-c-style-cast,*-pro-type-cstyle-cast)
+  // ReSharper disable once CppCStyleCast
+  return (const T *)m_buffer;
+  // NOLINTEND(*-avoid-c-style-cast,*-pro-type-cstyle-cast)
 }
 
 template <typename T, std::size_t C>
@@ -574,7 +584,7 @@ constexpr void FixedCapacityVector<T, C>::clear() noexcept {
   if constexpr (!std::is_trivially_destructible_v<T>) {
     // destruct all constructed objects
     for (SizeType i = 0; i < m_size; ++i) {
-      m_data[i].~T();
+      data()[i].~T();
     }
   }
   m_size = 0;
@@ -586,7 +596,7 @@ constexpr void FixedCapacityVector<T, C>::push_back(const T &value) {
     throw std::length_error("FixedCapacityVector: Attempt to push back "
                             "element into a full vector");
   }
-  new (&m_data[m_size++]) T(value);
+  new (std::addressof(data()[m_size++])) T(value);
 }
 
 template <typename T, std::size_t C>
@@ -595,19 +605,19 @@ constexpr void FixedCapacityVector<T, C>::push_back(T &&value) {
     throw std::length_error("FixedCapacityVector: Attempt to push back "
                             "element into a full vector");
   }
-  new (&m_data[m_size++]) T(std::move(value));
+  new (std::addressof(data()[m_size++])) T(std::move(value));
 }
 
 template <typename T, std::size_t C>
 template <typename... Args>
-constexpr typename FixedCapacityVector<T, C>::ReferenceType
+constexpr FixedCapacityVector<T, C>::ReferenceType
 FixedCapacityVector<T, C>::emplace_back(Args &&...args) {
   if (is_full()) {
     throw std::length_error("FixedCapacityVector: Attempt to emplace back "
                             "element into a full vector");
   }
-  new (&m_data[m_size++]) T(std::forward<Args>(args)...);
-  return m_data[m_size - 1];
+  new (std::addressof(data()[m_size++])) T(std::forward<Args>(args)...);
+  return data()[m_size - 1];
 }
 
 template <typename T, std::size_t C>
@@ -616,81 +626,80 @@ constexpr void FixedCapacityVector<T, C>::pop_back() {
     throw std::out_of_range("FixedCapacityVector: Attempt to pop back "
                             "element of empty vector");
   }
-  m_data[--m_size].~T();
+  data()[--m_size].~T();
 }
 
 template <typename T, std::size_t C>
-[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::Iterator
+[[nodiscard]] constexpr FixedCapacityVector<T, C>::Iterator
 FixedCapacityVector<T, C>::begin() noexcept {
-  return m_data;
+  return data();
 }
 
 template <typename T, std::size_t C>
-[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ConstIterator
+[[nodiscard]] constexpr FixedCapacityVector<T, C>::ConstIterator
 FixedCapacityVector<T, C>::begin() const noexcept {
-  return m_data;
+  return data();
 }
 
 template <typename T, std::size_t C>
-[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ConstIterator
+[[nodiscard]] constexpr FixedCapacityVector<T, C>::ConstIterator
 FixedCapacityVector<T, C>::cbegin() const noexcept {
-  return m_data;
+  return data();
 }
 
 template <typename T, std::size_t C>
-[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ReverseIterator
+[[nodiscard]] constexpr FixedCapacityVector<T, C>::ReverseIterator
 FixedCapacityVector<T, C>::rbegin() noexcept {
   return std::make_reverse_iterator(end());
 }
 
 template <typename T, std::size_t C>
-[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ConstReverseIterator
+[[nodiscard]] constexpr FixedCapacityVector<T, C>::ConstReverseIterator
 FixedCapacityVector<T, C>::rbegin() const noexcept {
   return std::make_reverse_iterator(end());
 }
 
 template <typename T, std::size_t C>
-[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ConstReverseIterator
+[[nodiscard]] constexpr FixedCapacityVector<T, C>::ConstReverseIterator
 FixedCapacityVector<T, C>::crbegin() const noexcept {
   return std::make_reverse_iterator(cend());
 }
 
 template <typename T, std::size_t C>
-[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::Iterator
+[[nodiscard]] constexpr FixedCapacityVector<T, C>::Iterator
 FixedCapacityVector<T, C>::end() noexcept {
-  return m_data + m_size;
+  return data() + m_size;
 }
 
 template <typename T, std::size_t C>
-[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ConstIterator
+[[nodiscard]] constexpr FixedCapacityVector<T, C>::ConstIterator
 FixedCapacityVector<T, C>::end() const noexcept {
-  return m_data + m_size;
+  return data() + m_size;
 }
 
 template <typename T, std::size_t C>
-[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ConstIterator
+[[nodiscard]] constexpr FixedCapacityVector<T, C>::ConstIterator
 FixedCapacityVector<T, C>::cend() const noexcept {
-  return m_data + m_size;
+  return data() + m_size;
 }
 
 template <typename T, std::size_t C>
-[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ReverseIterator
+[[nodiscard]] constexpr FixedCapacityVector<T, C>::ReverseIterator
 FixedCapacityVector<T, C>::rend() noexcept {
   return std::make_reverse_iterator(begin());
 }
 
 template <typename T, std::size_t C>
-[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ConstReverseIterator
+[[nodiscard]] constexpr FixedCapacityVector<T, C>::ConstReverseIterator
 FixedCapacityVector<T, C>::rend() const noexcept {
   return std::make_reverse_iterator(begin());
 }
 
 template <typename T, std::size_t C>
-[[nodiscard]] constexpr typename FixedCapacityVector<T, C>::ConstReverseIterator
+[[nodiscard]] constexpr FixedCapacityVector<T, C>::ConstReverseIterator
 FixedCapacityVector<T, C>::crend() const noexcept {
   return std::make_reverse_iterator(cbegin());
 }
-
 } // namespace CppPlayground
 
 #endif
