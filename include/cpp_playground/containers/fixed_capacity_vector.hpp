@@ -66,7 +66,12 @@ public:
    * @param other The vector to copy from.
    */
   constexpr FixedCapacityVector(const FixedCapacityVector &other) noexcept(
-      std::is_nothrow_copy_constructible_v<ValueType>);
+      std::is_nothrow_copy_constructible_v<ValueType>)
+      : m_size(other.m_size) {
+    for (SizeType i = 0; i < other.m_size; ++i) {
+      new (std::addressof(data()[i])) T(other.data()[i]);
+    }
+  }
 
   /**
    * @brief Copy constructor.
@@ -79,7 +84,17 @@ public:
    */
   template <SizeType OtherCapacity>
   constexpr FixedCapacityVector(
-      const FixedCapacityVector<T, OtherCapacity> &other);
+      const FixedCapacityVector<T, OtherCapacity> &other) {
+    if (other.size() > Capacity) {
+      throw std::length_error("FixedCapacityVector: Attempt to copy from a "
+                              "vector with more elements than capacity");
+    }
+    for (SizeType i = 0; i < other.size(); ++i) {
+      // use placement new operator to copy construct objects at the right place
+      new (std::addressof(data()[i])) T(other.data()[i]);
+      ++m_size;
+    }
+  }
 
   /**
    * @brief Move constructor.
@@ -87,7 +102,14 @@ public:
    * @param other The vector to move from.
    */
   constexpr FixedCapacityVector(FixedCapacityVector &&other) noexcept(
-      std::is_nothrow_move_constructible_v<ValueType>);
+      std::is_nothrow_move_constructible_v<ValueType>) {
+    for (SizeType i = 0; i < other.m_size; ++i) {
+      new (std::addressof(data()[i])) T(std::move(other.data()[i]));
+      ++m_size;
+      std::destroy_at(std::addressof(other.data()[i]));
+    }
+    other.m_size = 0;
+  }
 
   /**
    * @brief Move constructor.
@@ -99,7 +121,18 @@ public:
    * capacity.
    */
   template <SizeType OtherCapacity>
-  constexpr FixedCapacityVector(FixedCapacityVector<T, OtherCapacity> &&other);
+  constexpr FixedCapacityVector(FixedCapacityVector<T, OtherCapacity> &&other) {
+    if (other.size() > Capacity) {
+      throw std::length_error("FixedCapacityVector: Attempt to move from a "
+                              "vector with more elements than capacity");
+    }
+    for (SizeType i = 0; i < other.size(); ++i) {
+      new (std::addressof(data()[i])) T(std::move(other.data()[i]));
+      ++m_size;
+      std::destroy_at(std::addressof(other.data()[i]));
+    }
+    other.clear();
+  }
 
   /**
    * @brief Initializer list constructor.
@@ -109,12 +142,20 @@ public:
    * @throw std::length_error if the size of the initializer list exceeds the
    * vector's capacity.
    */
-  constexpr FixedCapacityVector(std::initializer_list<T> init);
+  constexpr FixedCapacityVector(std::initializer_list<T> init) {
+    if (init.size() > Capacity) {
+      throw std::length_error("FixedCapacityVector: Attempt to initialize with "
+                              "more elements than capacity");
+    }
+    for (const auto &item : init) {
+      new (std::addressof(data()[m_size++])) T(item);
+    }
+  }
 
   /**
    * @brief Destructor. Destroys all elements in the vector.
    */
-  constexpr ~FixedCapacityVector();
+  constexpr ~FixedCapacityVector() { clear(); }
 
   /**
    * @brief Copy assignment operator.
@@ -128,7 +169,19 @@ public:
   constexpr FixedCapacityVector &
   operator=(const FixedCapacityVector<ValueType, OtherCapacity>
                 &other) noexcept(OtherCapacity <= Capacity &&
-                                 std::is_nothrow_copy_assignable_v<ValueType>);
+                                 std::is_nothrow_copy_assignable_v<ValueType>) {
+    if (other.m_size > Capacity) {
+      throw std::length_error("FixedCapacityVector: Attempt to copy from a "
+                              "vector with more elements than capacity");
+    }
+    std::destroy(data(), data() + m_size);
+    m_size = 0;
+    for (SizeType i = 0; i < other.m_size; ++i) {
+      new (std::addressof(data()[i])) T(other.data()[i]);
+      ++m_size;
+    }
+    return *this;
+  }
 
   /**
    * @brief Move assignment operator.
@@ -137,14 +190,37 @@ public:
    */
   constexpr FixedCapacityVector &
   operator=(FixedCapacityVector &&other) noexcept(
-      std::is_nothrow_move_constructible_v<ValueType>);
+      std::is_nothrow_move_constructible_v<ValueType>) {
+    if (this == &other) {
+      return *this;
+    }
+    clear();
+    for (SizeType i = 0; i < other.m_size; ++i) {
+      new (std::addressof(data()[i])) T(std::move(other.data()[i]));
+      ++m_size;
+      std::destroy_at(std::addressof(other.data()[i]));
+    }
+    other.m_size = 0;
+    return *this;
+  }
 
   /**
    * @brief Resizes the vector to the specified size.
    * @param new_size The new size of the vector.
    * @throw std::length_error if the new size exceeds the vector's capacity.
    */
-  constexpr void resize(SizeType new_size);
+  constexpr void resize(const SizeType new_size) noexcept(
+      std::is_nothrow_default_constructible_v<ValueType>) {
+    if (m_size == new_size) {
+      return;
+    }
+    while (m_size > new_size) {
+      pop_back();
+    }
+    while (m_size < new_size) {
+      emplace_back();
+    }
+  }
 
   /**
    * @brief Returns the number of elements in the vector.
@@ -234,33 +310,64 @@ public:
    * storage.
    * @return A pointer to the underlying array.
    */
-  [[nodiscard]] constexpr T *data() noexcept;
+  [[nodiscard]] constexpr T *data() noexcept {
+    // NOLINTBEGIN(*-avoid-c-style-cast,*-pro-type-cstyle-cast)
+    // ReSharper disable once CppCStyleCast
+    return (T *)m_buffer;
+    // NOLINTEND(*-avoid-c-style-cast,*-pro-type-cstyle-cast)
+  }
 
   /**
    * @brief Returns a const pointer to the underlying array serving as element
    * storage.
    * @return A const pointer to the underlying array.
    */
-  [[nodiscard]] constexpr const T *data() const noexcept;
+  [[nodiscard]] constexpr const T *data() const noexcept {
+    // NOLINTBEGIN(*-avoid-c-style-cast,*-pro-type-cstyle-cast)
+    // ReSharper disable once CppCStyleCast
+    return (const T *)m_buffer;
+    // NOLINTEND(*-avoid-c-style-cast,*-pro-type-cstyle-cast)
+  }
 
   /**
    * @brief Clears the vector, destroying all elements.
    */
-  constexpr void clear() noexcept;
+  constexpr void clear() noexcept {
+    if (is_empty()) {
+      return;
+    }
+
+    // destruct all constructed objects
+    std::destroy(data(), data() + m_size);
+    m_size = 0;
+  }
 
   /**
    * @brief Adds an element to the end of the vector by copying.
    * @param value The value to add.
    * @throw std::length_error if the vector is full.
    */
-  constexpr void push_back(const T &value);
+  constexpr void push_back(const T &value) {
+    if (is_full()) {
+      throw std::length_error("FixedCapacityVector: Attempt to push back "
+                              "element into a full vector");
+    }
+    new (std::addressof(data()[m_size++])) T(value);
+  }
 
   /**
    * @brief Adds an element to the end of the vector by moving.
    * @param value The value to add.
    * @throw std::length_error if the vector is full.
    */
-  constexpr void push_back(T &&value);
+  constexpr void push_back(T &&value) {
+
+    if (is_full()) {
+      throw std::length_error("FixedCapacityVector: Attempt to push back "
+                              "element into a full vector");
+    }
+    new (std::addressof(data()[m_size++])) T(std::move(value));
+  }
 
   /**
    * @brief Constructs an element in-place at the end of the vector.
@@ -271,13 +378,26 @@ public:
    * @throw std::length_error if the vector is full.
    */
   template <typename... Args>
-  constexpr ReferenceType emplace_back(Args &&...args);
+  constexpr ReferenceType emplace_back(Args &&...args) {
+    if (is_full()) {
+      throw std::length_error("FixedCapacityVector: Attempt to emplace back "
+                              "element into a full vector");
+    }
+    new (std::addressof(data()[m_size++])) T(std::forward<Args>(args)...);
+    return data()[m_size - 1];
+  }
 
   /**
    * @brief Removes the last element from the vector.
    * @throw std::out_of_range if the vector is empty.
    */
-  constexpr void pop_back();
+  constexpr void pop_back() {
+    if (is_empty()) {
+      throw std::out_of_range("FixedCapacityVector: Attempt to pop back "
+                              "element of empty vector");
+    }
+    std::destroy_at(std::addressof(data()[--m_size]));
+  }
 
   /**
    * @brief Returns an iterator to the beginning of the vector.
@@ -338,191 +458,6 @@ public:
   [[nodiscard]] constexpr auto crend() const noexcept { return rend(); }
 };
 
-template <typename T, std::size_t C>
-constexpr FixedCapacityVector<T, C>::FixedCapacityVector(
-    const FixedCapacityVector<T, C>
-        &other) noexcept(std::is_nothrow_copy_constructible_v<ValueType>)
-    : m_size(other.m_size) {
-  for (SizeType i = 0; i < other.m_size; ++i) {
-    new (std::addressof(data()[i])) T(other.data()[i]);
-  }
-}
-
-template <typename T, std::size_t C>
-template <std::size_t OtherCapacity>
-constexpr FixedCapacityVector<T, C>::FixedCapacityVector(
-    const FixedCapacityVector<T, OtherCapacity> &other) {
-  if (other.size() > C) {
-    throw std::length_error("FixedCapacityVector: Attempt to copy from a "
-                            "vector with more elements than capacity");
-  }
-  for (SizeType i = 0; i < other.size(); ++i) {
-    // use placement new operator to copy construct objects at the right place
-    new (std::addressof(data()[i])) T(other.data()[i]);
-    ++m_size;
-  }
-}
-
-template <typename T, std::size_t C>
-constexpr FixedCapacityVector<T, C>::FixedCapacityVector(
-    FixedCapacityVector<T, C>
-        &&other) noexcept(std::is_nothrow_move_constructible_v<T>) {
-  for (SizeType i = 0; i < other.m_size; ++i) {
-    new (std::addressof(data()[i])) T(std::move(other.data()[i]));
-    ++m_size;
-    std::destroy_at(std::addressof(other.data()[i]));
-  }
-  other.m_size = 0;
-}
-
-template <typename T, std::size_t C>
-constexpr FixedCapacityVector<T, C>::FixedCapacityVector(
-    std::initializer_list<T> init) {
-  if (init.size() > C) {
-    throw std::length_error("FixedCapacityVector: Attempt to initialize with "
-                            "more elements than capacity");
-  }
-  for (const auto &item : init) {
-    new (std::addressof(data()[m_size++])) T(item);
-  }
-}
-
-template <typename T, std::size_t C>
-template <std::size_t OtherCapacity>
-constexpr FixedCapacityVector<T, C>::FixedCapacityVector(
-    FixedCapacityVector<T, OtherCapacity> &&other) {
-  if (other.size() > C) {
-    throw std::length_error("FixedCapacityVector: Attempt to move from a "
-                            "vector with more elements than capacity");
-  }
-  for (SizeType i = 0; i < other.size(); ++i) {
-    new (std::addressof(data()[i])) T(std::move(other.data()[i]));
-    ++m_size;
-    std::destroy_at(std::addressof(other.data()[i]));
-  }
-  other.clear();
-}
-
-template <typename T, std::size_t C>
-constexpr FixedCapacityVector<T, C>::~FixedCapacityVector() {
-  clear();
-}
-
-template <typename T, std::size_t C>
-template <std::size_t OtherCapacity>
-constexpr FixedCapacityVector<T, C> &FixedCapacityVector<T, C>::operator=(
-    const FixedCapacityVector<T, OtherCapacity>
-        &other) noexcept(OtherCapacity <= Capacity &&
-                         std::is_nothrow_copy_assignable_v<ValueType>) {
-  if (other.m_size > C) {
-    throw std::length_error("FixedCapacityVector: Attempt to copy from a "
-                            "vector with more elements than capacity");
-  }
-  std::destroy(data(), data() + m_size);
-  m_size = 0;
-  for (SizeType i = 0; i < other.m_size; ++i) {
-    new (std::addressof(data()[i])) T(other.data()[i]);
-    ++m_size;
-  }
-  return *this;
-}
-
-template <typename T, std::size_t C>
-constexpr FixedCapacityVector<T, C> &FixedCapacityVector<T, C>::operator=(
-    FixedCapacityVector<T, C>
-        &&other) noexcept(std::is_nothrow_move_constructible_v<T>) {
-  if (this == &other) {
-    return *this;
-  }
-  clear();
-  for (SizeType i = 0; i < other.m_size; ++i) {
-    new (std::addressof(data()[i])) T(std::move(other.data()[i]));
-    ++m_size;
-    std::destroy_at(std::addressof(other.data()[i]));
-  }
-  other.m_size = 0;
-  return *this;
-}
-
-template <typename T, std::size_t C>
-constexpr void FixedCapacityVector<T, C>::resize(SizeType new_size) {
-  if (m_size == new_size) {
-    return;
-  }
-  while (m_size > new_size) {
-    pop_back();
-  }
-  while (m_size < new_size) {
-    emplace_back();
-  }
-}
-
-template <typename T, std::size_t C>
-[[nodiscard]] constexpr T *FixedCapacityVector<T, C>::data() noexcept {
-  // NOLINTBEGIN(*-avoid-c-style-cast,*-pro-type-cstyle-cast)
-  // ReSharper disable once CppCStyleCast
-  return (T *)m_buffer;
-  // NOLINTEND(*-avoid-c-style-cast,*-pro-type-cstyle-cast)
-}
-
-template <typename T, std::size_t C>
-[[nodiscard]] constexpr const T *
-FixedCapacityVector<T, C>::data() const noexcept {
-  // NOLINTBEGIN(*-avoid-c-style-cast,*-pro-type-cstyle-cast)
-  // ReSharper disable once CppCStyleCast
-  return (const T *)m_buffer;
-  // NOLINTEND(*-avoid-c-style-cast,*-pro-type-cstyle-cast)
-}
-
-template <typename T, std::size_t C>
-constexpr void FixedCapacityVector<T, C>::clear() noexcept {
-  if (is_empty()) {
-    return;
-  }
-
-  // destruct all constructed objects
-  std::destroy(data(), data() + m_size);
-  m_size = 0;
-}
-
-template <typename T, std::size_t C>
-constexpr void FixedCapacityVector<T, C>::push_back(const T &value) {
-  if (is_full()) {
-    throw std::length_error("FixedCapacityVector: Attempt to push back "
-                            "element into a full vector");
-  }
-  new (std::addressof(data()[m_size++])) T(value);
-}
-
-template <typename T, std::size_t C>
-constexpr void FixedCapacityVector<T, C>::push_back(T &&value) {
-  if (is_full()) {
-    throw std::length_error("FixedCapacityVector: Attempt to push back "
-                            "element into a full vector");
-  }
-  new (std::addressof(data()[m_size++])) T(std::move(value));
-}
-
-template <typename T, std::size_t C>
-template <typename... Args>
-constexpr FixedCapacityVector<T, C>::ReferenceType
-FixedCapacityVector<T, C>::emplace_back(Args &&...args) {
-  if (is_full()) {
-    throw std::length_error("FixedCapacityVector: Attempt to emplace back "
-                            "element into a full vector");
-  }
-  new (std::addressof(data()[m_size++])) T(std::forward<Args>(args)...);
-  return data()[m_size - 1];
-}
-
-template <typename T, std::size_t C>
-constexpr void FixedCapacityVector<T, C>::pop_back() {
-  if (is_empty()) {
-    throw std::out_of_range("FixedCapacityVector: Attempt to pop back "
-                            "element of empty vector");
-  }
-  std::destroy_at(std::addressof(data()[--m_size]));
-}
 } // namespace CppPlayground
 
 #endif
