@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <array>
+#include <catch2/catch_template_test_macros.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <cpp_playground/containers/fixed_capacity_vector.hpp>
 #include <cpp_playground/testing/thread_local_lifetime_tracker.hpp>
@@ -9,6 +11,22 @@
 
 using namespace CppPlayground;
 using namespace CppPlayground::Testing;
+
+TEST_CASE("FixedCapacityVector: Check Type Size", "[containers]") {
+  static constexpr auto PointerSize = sizeof(std::byte *);
+  REQUIRE(sizeof(FixedCapacityVector<uint64_t, 1>) ==
+          PointerSize + sizeof(uint64_t));
+  REQUIRE(sizeof(FixedCapacityVector<uint64_t, 8>) ==
+          PointerSize + 8 * sizeof(uint64_t));
+  REQUIRE(sizeof(FixedCapacityVector<uint64_t, 13>) ==
+          PointerSize + 13 * sizeof(uint64_t));
+  REQUIRE(sizeof(FixedCapacityVector<std::byte, 1>) ==
+          2 * PointerSize); // due to alignment
+  REQUIRE(sizeof(FixedCapacityVector<std::byte, 8>) ==
+          PointerSize + 8 * sizeof(std::byte));
+  REQUIRE(sizeof(FixedCapacityVector<std::byte, 13>) ==
+          3 * PointerSize); // due to alignment
+}
 
 TEST_CASE("FixedCapacityVector: Constructors", "[containers]") {
   constexpr uint64_t Capacity = 3UL;
@@ -426,8 +444,7 @@ TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
 }
 
 TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
-                 "FixedCapacityVector: pop_back",
-                 "[containers]") {
+                 "FixedCapacityVector: pop_back", "[containers]") {
   constexpr uint64_t Capacity = 3;
   FixedCapacityVector<ThreadLocalLifetimeTracker, Capacity> vector;
   vector.emplace_back();

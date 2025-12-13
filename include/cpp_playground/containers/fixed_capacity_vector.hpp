@@ -45,11 +45,13 @@ public:
   /// The size of a single element in bytes.
   static constexpr SizeType ElementSize = sizeof(ValueType);
 
+  static_assert(Capacity > 0);
+
 private:
+  SizeType m_size = 0UL;
   // NOLINTBEGIN(*-avoid-c-arrays)
   alignas(ValueType) std::byte m_buffer[Capacity * ElementSize]{};
   // NOLINTEND(*-avoid-c-arrays)
-  SizeType m_size = 0UL;
 
 public:
   /**
