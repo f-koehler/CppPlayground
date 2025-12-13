@@ -154,7 +154,7 @@ public:
    * @brief Returns the maximum number of elements the vector can hold.
    * @return The capacity of the vector.
    */
-  [[nodiscard]] static consteval SizeType capacity() noexcept {
+  [[nodiscard]] consteval SizeType capacity() const noexcept {
     return Capacity;
   }
 
