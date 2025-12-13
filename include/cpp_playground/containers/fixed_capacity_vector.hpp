@@ -88,6 +88,18 @@ public:
       std::is_nothrow_move_constructible_v<ValueType>);
 
   /**
+   * @brief Move constructor.
+   * @details Moves elements from another FixedCapacityVector. The other vector
+   * can have a different capacity.
+   * @tparam OtherCapacity The capacity of the other vector.
+   * @param other The vector to move from.
+   * @throw std::length_error if the other vector's size exceeds this vector's
+   * capacity.
+   */
+  template <SizeType OtherCapacity>
+  constexpr FixedCapacityVector(FixedCapacityVector<T, OtherCapacity> &&other);
+
+  /**
    * @brief Initializer list constructor.
    * @details Constructs the vector with the elements from the provided
    * initializer list.
@@ -380,6 +392,22 @@ constexpr FixedCapacityVector<T, C>::FixedCapacityVector(
   for (const auto &item : init) {
     new (std::addressof(data()[m_size++])) T(item);
   }
+}
+
+template <typename T, std::size_t C>
+template <std::size_t OtherCapacity>
+constexpr FixedCapacityVector<T, C>::FixedCapacityVector(
+    FixedCapacityVector<T, OtherCapacity> &&other) {
+  if (other.size() > C) {
+    throw std::length_error("FixedCapacityVector: Attempt to move from a "
+                            "vector with more elements than capacity");
+  }
+  for (SizeType i = 0; i < other.size(); ++i) {
+    new (std::addressof(data()[i])) T(std::move(other.data()[i]));
+    ++m_size;
+    other.data()[i].~T();
+  }
+  other.clear();
 }
 
 template <typename T, std::size_t C>
