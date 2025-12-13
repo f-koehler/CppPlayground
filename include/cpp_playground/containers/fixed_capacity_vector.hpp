@@ -361,7 +361,6 @@ public:
    * @throw std::length_error if the vector is full.
    */
   constexpr void push_back(T &&value) {
-
     if (is_full()) {
       throw std::length_error("FixedCapacityVector: Attempt to push back "
                               "element into a full vector");
