@@ -126,7 +126,9 @@ public:
    */
   template <SizeType OtherCapacity>
   constexpr FixedCapacityVector &
-  operator=(const FixedCapacityVector<ValueType, OtherCapacity> &other);
+  operator=(const FixedCapacityVector<ValueType, OtherCapacity>
+                &other) noexcept(OtherCapacity <= Capacity &&
+                                 std::is_nothrow_copy_assignable_v<ValueType>);
 
   /**
    * @brief Move assignment operator.
@@ -420,7 +422,9 @@ constexpr FixedCapacityVector<T, C>::~FixedCapacityVector() {
 template <typename T, std::size_t C>
 template <std::size_t OtherCapacity>
 constexpr FixedCapacityVector<T, C> &FixedCapacityVector<T, C>::operator=(
-    const FixedCapacityVector<T, OtherCapacity> &other) {
+    const FixedCapacityVector<T, OtherCapacity>
+        &other) noexcept(OtherCapacity <= Capacity &&
+                         std::is_nothrow_copy_assignable_v<ValueType>) {
   if (other.m_size > C) {
     throw std::length_error("FixedCapacityVector: Attempt to copy from a "
                             "vector with more elements than capacity");
