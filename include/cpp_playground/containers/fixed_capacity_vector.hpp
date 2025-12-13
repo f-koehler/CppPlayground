@@ -406,7 +406,7 @@ constexpr FixedCapacityVector<T, C>::FixedCapacityVector(
   for (SizeType i = 0; i < other.size(); ++i) {
     new (&m_data[i]) T(std::move(other.data()[i]));
     ++m_size;
-    std::destroy_at(std::addressof(m_data[i]));
+    std::destroy_at(std::addressof(other.data()[i]));
   }
   other.clear();
 }
