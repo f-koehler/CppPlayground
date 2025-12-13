@@ -150,7 +150,7 @@ public:
    * @brief Returns the number of elements in the vector.
    * @return The current number of elements.
    */
-  [[nodiscard]] constexpr SizeType size() const noexcept;
+  [[nodiscard]] constexpr SizeType size() const noexcept { return m_size; }
 
   /**
    * @brief Returns the maximum number of elements the vector can hold.
@@ -164,41 +164,45 @@ public:
    * @brief Checks if the vector is empty.
    * @return true if the vector is empty, false otherwise.
    */
-  [[nodiscard]] constexpr bool is_empty() const noexcept;
+  [[nodiscard]] constexpr bool is_empty() const noexcept {
+    return m_size == 0UL;
+  }
 
   /**
    * @brief Checks if the vector is full.
    * @return true if the vector has reached its capacity, false otherwise.
    */
-  [[nodiscard]] constexpr bool is_full() const noexcept;
-
-  /**
-   * @brief Accesses the first element.
-   * @return A const reference to the first element.
-   * @throw std::out_of_range if the vector is empty.
-   */
-  [[nodiscard]] constexpr ConstReferenceType front() const;
-
-  /**
-   * @brief Accesses the last element.
-   * @return A const reference to the last element.
-   * @throw std::out_of_range if the vector is empty.
-   */
-  [[nodiscard]] constexpr ConstReferenceType back() const;
+  [[nodiscard]] constexpr bool is_full() const noexcept {
+    return m_size == Capacity;
+  }
 
   /**
    * @brief Accesses the first element.
    * @return A reference to the first element.
    * @throw std::out_of_range if the vector is empty.
    */
-  [[nodiscard]] constexpr ReferenceType front();
+  template <typename Self>
+  [[nodiscard]] constexpr auto &&front(this Self &&self) {
+    if (self.is_empty()) {
+      throw std::out_of_range("FixedCapacityVector: Attempt to access front "
+                              "element of empty vector");
+    }
+    return *std::forward<Self>(self).data();
+  }
 
   /**
    * @brief Accesses the last element.
    * @return A reference to the last element.
    * @throw std::out_of_range if the vector is empty.
    */
-  [[nodiscard]] constexpr ReferenceType back();
+  template <typename Self>
+  [[nodiscard]] constexpr auto &&back(this Self &&self) {
+    if (self.is_empty()) {
+      throw std::out_of_range("FixedCapacityVector: Attempt to access front "
+                              "element of empty vector");
+    }
+    return std::forward<Self>(self).data()[self.m_size - 1];
+  }
 
   /**
    * @brief Accesses the element at a specific index with bounds checking.
@@ -206,29 +210,24 @@ public:
    * @return A reference to the element at the specified index.
    * @throw std::out_of_range if the index is out of bounds.
    */
-  [[nodiscard]] constexpr ReferenceType at(SizeType index);
-
-  /**
-   * @brief Accesses the element at a specific index with bounds checking.
-   * @param index The index of the element to access.
-   * @return A const reference to the element at the specified index.
-   * @throw std::out_of_range if the index is out of bounds.
-   */
-  [[nodiscard]] constexpr ConstReferenceType at(SizeType index) const;
+  template <typename Self>
+  [[nodiscard]] constexpr auto &&at(this Self &&self, SizeType index) {
+    if (index >= self.m_size) {
+      throw std::out_of_range("FixedCapacityVector: Out of range access");
+    }
+    return std::forward<Self>(self).data()[index];
+  }
 
   /**
    * @brief Accesses the element at a specific index without bounds checking.
    * @param index The index of the element to access.
    * @return A reference to the element at the specified index.
    */
-  [[nodiscard]] constexpr ReferenceType operator[](SizeType index) noexcept;
-  /**
-   * @brief Accesses the element at a specific index without bounds checking.
-   * @param index The index of the element to access.
-   * @return A const reference to the element at the specified index.
-   */
-  [[nodiscard]] constexpr ConstReferenceType
-  operator[](SizeType index) const noexcept;
+  template <typename Self>
+  [[nodiscard]] constexpr auto &&operator[](this Self &&self,
+                                            SizeType index) noexcept {
+    return std::forward<Self>(self).data()[index];
+  }
 
   /**
    * @brief Returns a pointer to the underlying array serving as element
@@ -284,69 +283,59 @@ public:
    * @brief Returns an iterator to the beginning of the vector.
    * @return An iterator to the first element.
    */
-  [[nodiscard]] constexpr Iterator begin() noexcept;
+  template <typename Self> [[nodiscard]] auto begin(this Self &&self) noexcept {
+    return std::forward<Self>(self).data();
+  }
+
   /**
    * @brief Returns a const iterator to the beginning of the vector.
    * @return A const iterator to the first element.
    */
-  [[nodiscard]] constexpr ConstIterator begin() const noexcept;
-  /**
-   * @brief Returns a const iterator to the beginning of the vector.
-   * @return A const iterator to the first element.
-   */
-  [[nodiscard]] constexpr ConstIterator cbegin() const noexcept;
-  /**
-   * @brief Returns a reverse iterator to the beginning of the reversed vector.
-   * @return A reverse iterator to the first element of the reversed vector.
-   */
-  [[nodiscard]] constexpr ReverseIterator rbegin() noexcept;
-  /**
-   * @brief Returns a const reverse iterator to the beginning of the reversed
-   * vector.
-   * @return A const reverse iterator to the first element of the reversed
-   * vector.
-   */
-  [[nodiscard]] constexpr ConstReverseIterator rbegin() const noexcept;
-  /**
-   * @brief Returns a const reverse iterator to the beginning of the reversed
-   * vector.
-   * @return A const reverse iterator to the first element of the reversed
-   * vector.
-   */
-  [[nodiscard]] constexpr ConstReverseIterator crbegin() const noexcept;
+  [[nodiscard]] auto cbegin() const noexcept { return data(); }
+
   /**
    * @brief Returns an iterator to the end of the vector.
    * @return An iterator to the element following the last element.
    */
-  [[nodiscard]] constexpr Iterator end() noexcept;
+  template <typename Self> [[nodiscard]] auto end(this Self &&self) noexcept {
+    return std::forward<Self>(self).data() + self.m_size;
+  }
+
   /**
    * @brief Returns a const iterator to the end of the vector.
    * @return A const iterator to the element following the last element.
    */
-  [[nodiscard]] constexpr ConstIterator end() const noexcept;
+  [[nodiscard]] auto cend() const noexcept { return data() + m_size; }
   /**
-   * @brief Returns a const iterator to the end of the vector.
-   * @return A const iterator to the element following the last element.
+   * @brief Returns a reverse iterator to the beginning of the reversed vector.
+   * @return A reverse iterator to the first element of the reversed vector.
    */
-  [[nodiscard]] constexpr ConstIterator cend() const noexcept;
+  template <typename Self>
+  [[nodiscard]] constexpr auto rbegin(this Self &&self) noexcept {
+    return std::make_reverse_iterator(std::forward<Self>(self).end());
+  }
+  /**
+   * @brief Returns a const reverse iterator to the beginning of the reversed
+   * vector.
+   * @return A const reverse iterator to the first element of the reversed
+   * vector.
+   */
+  [[nodiscard]] constexpr auto crbegin() const noexcept { return rbegin(); }
   /**
    * @brief Returns a reverse iterator to the end of the reversed vector.
    * @return A reverse iterator to the element following the last element of the
    * reversed vector.
    */
-  [[nodiscard]] constexpr ReverseIterator rend() noexcept;
+  template <typename Self>
+  [[nodiscard]] constexpr auto rend(this Self &&self) noexcept {
+    return std::make_reverse_iterator(std::forward<Self>(self).begin());
+  }
   /**
    * @brief Returns a const reverse iterator to the end of the reversed vector.
    * @return A const reverse iterator to the element following the last element
    * of the reversed vector.
    */
-  [[nodiscard]] constexpr ConstReverseIterator rend() const noexcept;
-  /**
-   * @brief Returns a const reverse iterator to the end of the reversed vector.
-   * @return A const reverse iterator to the element following the last element
-   * of the reversed vector.
-   */
-  [[nodiscard]] constexpr ConstReverseIterator crend() const noexcept;
+  [[nodiscard]] constexpr auto crend() const noexcept { return rend(); }
 };
 
 template <typename T, std::size_t C>
@@ -469,94 +458,6 @@ constexpr void FixedCapacityVector<T, C>::resize(SizeType new_size) {
 }
 
 template <typename T, std::size_t C>
-[[nodiscard]] constexpr FixedCapacityVector<T, C>::SizeType
-FixedCapacityVector<T, C>::size() const noexcept {
-  return m_size;
-}
-
-template <typename T, std::size_t C>
-[[nodiscard]] constexpr bool
-FixedCapacityVector<T, C>::is_empty() const noexcept {
-  return m_size == 0UL;
-}
-
-template <typename T, std::size_t C>
-[[nodiscard]] constexpr bool
-FixedCapacityVector<T, C>::is_full() const noexcept {
-  return m_size == C;
-}
-
-template <typename T, std::size_t C>
-[[nodiscard]] constexpr FixedCapacityVector<T, C>::ConstReferenceType
-FixedCapacityVector<T, C>::front() const {
-  if (is_empty()) {
-    throw std::out_of_range("FixedCapacityVector: Attempt to access front "
-                            "element of empty vector");
-  }
-  return *data();
-}
-
-template <typename T, std::size_t C>
-[[nodiscard]] constexpr FixedCapacityVector<T, C>::ConstReferenceType
-FixedCapacityVector<T, C>::back() const {
-  if (is_empty()) {
-    throw std::out_of_range("FixedCapacityVector: Attempt to access back "
-                            "element of empty vector");
-  }
-  return data()[m_size - 1];
-}
-
-template <typename T, std::size_t C>
-[[nodiscard]] constexpr FixedCapacityVector<T, C>::ReferenceType
-FixedCapacityVector<T, C>::front() {
-  if (is_empty()) {
-    throw std::out_of_range("FixedCapacityVector: Attempt to access front "
-                            "element of empty vector");
-  }
-  return *data();
-}
-
-template <typename T, std::size_t C>
-[[nodiscard]] constexpr FixedCapacityVector<T, C>::ReferenceType
-FixedCapacityVector<T, C>::back() {
-  if (is_empty()) {
-    throw std::out_of_range("FixedCapacityVector: Attempt to access back "
-                            "element of empty vector");
-  }
-  return data()[m_size - 1];
-}
-
-template <typename T, std::size_t C>
-[[nodiscard]] constexpr FixedCapacityVector<T, C>::ReferenceType
-FixedCapacityVector<T, C>::at(SizeType index) {
-  if (index >= m_size) {
-    throw std::out_of_range("FixedCapacityVector: Out of range access");
-  }
-  return data()[index];
-}
-
-template <typename T, std::size_t C>
-[[nodiscard]] constexpr FixedCapacityVector<T, C>::ReferenceType
-FixedCapacityVector<T, C>::operator[](SizeType index) noexcept {
-  return data()[index];
-}
-
-template <typename T, std::size_t C>
-[[nodiscard]] constexpr FixedCapacityVector<T, C>::ConstReferenceType
-FixedCapacityVector<T, C>::operator[](SizeType index) const noexcept {
-  return data()[index];
-}
-
-template <typename T, std::size_t C>
-[[nodiscard]] constexpr FixedCapacityVector<T, C>::ConstReferenceType
-FixedCapacityVector<T, C>::at(SizeType index) const {
-  if (index >= m_size) {
-    throw std::out_of_range("FixedCapacityVector: Out of range access");
-  }
-  return data()[index];
-}
-
-template <typename T, std::size_t C>
 [[nodiscard]] constexpr T *FixedCapacityVector<T, C>::data() noexcept {
   // NOLINTBEGIN(*-avoid-c-style-cast,*-pro-type-cstyle-cast)
   // ReSharper disable once CppCStyleCast
@@ -621,78 +522,6 @@ constexpr void FixedCapacityVector<T, C>::pop_back() {
                             "element of empty vector");
   }
   std::destroy_at(std::addressof(data()[--m_size]));
-}
-
-template <typename T, std::size_t C>
-[[nodiscard]] constexpr FixedCapacityVector<T, C>::Iterator
-FixedCapacityVector<T, C>::begin() noexcept {
-  return data();
-}
-
-template <typename T, std::size_t C>
-[[nodiscard]] constexpr FixedCapacityVector<T, C>::ConstIterator
-FixedCapacityVector<T, C>::begin() const noexcept {
-  return data();
-}
-
-template <typename T, std::size_t C>
-[[nodiscard]] constexpr FixedCapacityVector<T, C>::ConstIterator
-FixedCapacityVector<T, C>::cbegin() const noexcept {
-  return data();
-}
-
-template <typename T, std::size_t C>
-[[nodiscard]] constexpr FixedCapacityVector<T, C>::ReverseIterator
-FixedCapacityVector<T, C>::rbegin() noexcept {
-  return std::make_reverse_iterator(end());
-}
-
-template <typename T, std::size_t C>
-[[nodiscard]] constexpr FixedCapacityVector<T, C>::ConstReverseIterator
-FixedCapacityVector<T, C>::rbegin() const noexcept {
-  return std::make_reverse_iterator(end());
-}
-
-template <typename T, std::size_t C>
-[[nodiscard]] constexpr FixedCapacityVector<T, C>::ConstReverseIterator
-FixedCapacityVector<T, C>::crbegin() const noexcept {
-  return std::make_reverse_iterator(cend());
-}
-
-template <typename T, std::size_t C>
-[[nodiscard]] constexpr FixedCapacityVector<T, C>::Iterator
-FixedCapacityVector<T, C>::end() noexcept {
-  return data() + m_size;
-}
-
-template <typename T, std::size_t C>
-[[nodiscard]] constexpr FixedCapacityVector<T, C>::ConstIterator
-FixedCapacityVector<T, C>::end() const noexcept {
-  return data() + m_size;
-}
-
-template <typename T, std::size_t C>
-[[nodiscard]] constexpr FixedCapacityVector<T, C>::ConstIterator
-FixedCapacityVector<T, C>::cend() const noexcept {
-  return data() + m_size;
-}
-
-template <typename T, std::size_t C>
-[[nodiscard]] constexpr FixedCapacityVector<T, C>::ReverseIterator
-FixedCapacityVector<T, C>::rend() noexcept {
-  return std::make_reverse_iterator(begin());
-}
-
-template <typename T, std::size_t C>
-[[nodiscard]] constexpr FixedCapacityVector<T, C>::ConstReverseIterator
-FixedCapacityVector<T, C>::rend() const noexcept {
-  return std::make_reverse_iterator(begin());
-}
-
-template <typename T, std::size_t C>
-[[nodiscard]] constexpr FixedCapacityVector<T, C>::ConstReverseIterator
-FixedCapacityVector<T, C>::crend() const noexcept {
-  return std::make_reverse_iterator(cbegin());
 }
 } // namespace CppPlayground
 
