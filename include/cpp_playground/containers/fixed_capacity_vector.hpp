@@ -274,7 +274,7 @@ public:
   template <typename Self>
   [[nodiscard]] constexpr auto &&back(this Self &&self) {
     if (self.is_empty()) {
-      throw std::out_of_range("FixedCapacityVector: Attempt to access front "
+      throw std::out_of_range("FixedCapacityVector: Attempt to access back "
                               "element of empty vector");
     }
     return std::forward<Self>(self).data()[self.m_size - 1];
