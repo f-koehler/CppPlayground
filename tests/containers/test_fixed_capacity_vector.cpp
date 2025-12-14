@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <array>
+#include <catch2/catch_template_test_macros.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <cpp_playground/containers/fixed_capacity_vector.hpp>
 #include <cpp_playground/testing/thread_local_lifetime_tracker.hpp>
@@ -9,6 +11,20 @@
 
 using namespace CppPlayground;
 using namespace CppPlayground::Testing;
+
+TEST_CASE("FixedCapacityVector: Check Type Size", "[containers]") {
+  static constexpr auto PointerSize = sizeof(std::byte *);
+  REQUIRE(sizeof(FixedCapacityVector<uint64_t, 1>) == PointerSize + 8);
+  REQUIRE(sizeof(FixedCapacityVector<uint64_t, 8>) == PointerSize + 64);
+  REQUIRE(sizeof(FixedCapacityVector<uint64_t, 13>) == PointerSize + 104);
+  REQUIRE(sizeof(FixedCapacityVector<std::byte, 1>) ==
+          2 * PointerSize); // due to alignment
+  REQUIRE(sizeof(FixedCapacityVector<std::byte, 8>) == PointerSize + 8);
+  REQUIRE(sizeof(FixedCapacityVector<std::byte, 13>) ==
+          3 * PointerSize); // due to alignment
+  REQUIRE(sizeof(FixedCapacityVector<std::tuple<uint64_t, uint32_t>, 1>) == 24);
+  REQUIRE(sizeof(FixedCapacityVector<std::tuple<uint64_t, uint32_t>, 2>) == 40);
+}
 
 TEST_CASE("FixedCapacityVector: Constructors", "[containers]") {
   constexpr uint64_t Capacity = 3UL;
@@ -122,7 +138,7 @@ TEST_CASE_METHOD(
     "[containers]") {
   constexpr uint64_t Capacity = 3UL;
   {
-    const FixedCapacityVector<ThreadLocalLifetimeTracker, Capacity> vector;
+    FixedCapacityVector<ThreadLocalLifetimeTracker, Capacity> vector;
     REQUIRE(vector.size() == 0UL);
     REQUIRE(vector.capacity() == Capacity);
     REQUIRE(vector.is_empty());
@@ -426,8 +442,7 @@ TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
 }
 
 TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
-                 "FixedCapacityVector: pop_back",
-                 "[containers]") {
+                 "FixedCapacityVector: pop_back", "[containers]") {
   constexpr uint64_t Capacity = 3;
   FixedCapacityVector<ThreadLocalLifetimeTracker, Capacity> vector;
   vector.emplace_back();
