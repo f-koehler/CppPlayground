@@ -25,7 +25,7 @@ int main()
     // send message
     std::string message = "Hello world!";
     client_socket.write(message.size()).unwrap();
-    client_socket.write_exactly(std::span<std::byte> ((std::byte*)message.data(), message.size())).unwrap();
+    client_socket.write_exactly(message).unwrap();
 
     // read reply
     const std::size_t message_size = client_socket.read<std::size_t>().unwrap();

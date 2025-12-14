@@ -59,7 +59,7 @@ int main()
         // send reply
         message = "This is the reply from the server!";
         client_socket.write(message.size()).unwrap();
-        client_socket.write_exactly(std::span<std::byte>((std::byte*)message.data(), message.size())).unwrap();
+        client_socket.write_exactly(message).unwrap();
     }
 
     return EXIT_SUCCESS;

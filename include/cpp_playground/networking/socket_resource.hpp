@@ -192,6 +192,12 @@ namespace CppPlayground::Networking
             return {static_cast<std::size_t>(bytes_written)};
         }
 
+        [[nodiscard]] auto write(
+            const std::string& data) const -> ErrorHandling::Result<std::size_t, std::string>
+        {
+            return write(std::span<std::byte>((std::byte*)data.data(), data.size()));
+        }
+
         [[nodiscard]] auto write_exactly(
             const std::span<std::byte>& data) const -> ErrorHandling::Result<void, std::string>
         {
@@ -207,6 +213,12 @@ namespace CppPlayground::Networking
                                                       ErrorHandling::get_error_message(errno)));
             }
             return {};
+        }
+
+        [[nodiscard]] auto write_exactly(
+            const std::string& data) const -> auto
+        {
+            return write_exactly(std::span<std::byte>((std::byte*)data.data(), data.size()));
         }
 
 
