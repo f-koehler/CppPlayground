@@ -243,7 +243,7 @@ namespace CppPlayground::Networking
             return {static_cast<std::size_t>(bytes_read)};
         }
 
-        [[nodiscard]] auto read_exactly(std::span<std::byte>& data) -> ErrorHandling::Result<std::size_t, std::string>
+        [[nodiscard]] auto read_exactly(std::span<std::byte>& data) const -> ErrorHandling::Result<std::size_t, std::string>
         {
             auto result = read(data);
             if (!result)
