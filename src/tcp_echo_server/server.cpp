@@ -47,8 +47,19 @@ int main()
     {
         const auto client_socket = server_socket.accept(client_address, client_address_length).unwrap();
         std::println("Accepted connection from {}", client_address);
-        const uint64_t message_size = client_socket.read<uint64_t>().unwrap();
+        const std::size_t message_size = client_socket.read<std::size_t>().unwrap();
         std::println("Receiving {} byte message", message_size);
+
+        // read message
+        std::string message(message_size, '\0');
+        std::span<std::byte> message_span((std::byte*)message.data(), message_size);
+        client_socket.read_exactly(message_span).unwrap();
+        std::println("Received message: {}", message);
+
+        // send reply
+        message = "This is the reply from the server!";
+        client_socket.write(message.size()).unwrap();
+        client_socket.write_exactly(std::span<std::byte>((std::byte*)message.data(), message.size())).unwrap();
     }
 
     return EXIT_SUCCESS;
