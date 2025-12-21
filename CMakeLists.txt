@@ -7,7 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-add_library(CppPlayground STATIC src/cpp_playground/cpp_playground.cpp)
+add_library(CppPlayground STATIC src/cpp_playground/cpp_playground.cpp
+                                 include/cpp_playground/networking/epoll.hpp)
 target_include_directories(CppPlayground PUBLIC include)
 
 find_package(Catch2 REQUIRED)
