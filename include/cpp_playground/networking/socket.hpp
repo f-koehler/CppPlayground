@@ -32,20 +32,20 @@ template <> struct std::formatter<::sockaddr_in> {
 };
 
 namespace CppPlayground::Networking {
-class SocketResource {
+class Socket {
 private:
   int m_socket_fd;
 
-  explicit SocketResource(const int socket_fd) : m_socket_fd(socket_fd) {}
+  explicit Socket(const int socket_fd) : m_socket_fd(socket_fd) {}
 
 public:
-  static auto manage_socket(const int socket_fd) -> SocketResource {
-    return SocketResource(socket_fd);
+  static auto manage_socket(const int socket_fd) -> Socket {
+    return Socket(socket_fd);
   }
 
   static auto create_socket(const int domain, const int type,
                             const int protocol)
-      -> ErrorHandling::Result<SocketResource, std::string> {
+      -> ErrorHandling::Result<Socket, std::string> {
     const int socket_fd = ::socket(domain, type, protocol);
     if (socket_fd == -1) {
       return std::unexpected(
@@ -53,18 +53,17 @@ public:
                       ErrorHandling::format_source_location(),
                       ErrorHandling::get_error_message(errno)));
     }
-    return ErrorHandling::Ok(SocketResource(socket_fd));
+    return ErrorHandling::Ok(Socket(socket_fd));
     // return SocketResource(socket_fd);
   }
 
-  SocketResource(const SocketResource &) = delete;
+  Socket(const Socket &) = delete;
 
-  SocketResource(SocketResource &&other) noexcept
-      : m_socket_fd(other.m_socket_fd) {
+  Socket(Socket &&other) noexcept : m_socket_fd(other.m_socket_fd) {
     other.m_socket_fd = -1;
   }
 
-  ~SocketResource() {
+  ~Socket() {
     if (m_socket_fd != -1) {
       if (::close(m_socket_fd) != 0) {
         std::println("{}: error when closing socket: {}",
@@ -74,9 +73,9 @@ public:
     }
   }
 
-  SocketResource &operator=(const SocketResource &) = delete;
+  Socket &operator=(const Socket &) = delete;
 
-  SocketResource &operator=(SocketResource &&other) noexcept {
+  Socket &operator=(Socket &&other) noexcept {
     if (this == &other) {
       return *this;
     }
@@ -161,7 +160,7 @@ public:
 
   template <typename Address>
   [[nodiscard]] auto accept(Address &address, ::socklen_t &address_length) const
-      -> ErrorHandling::Result<SocketResource, std::string> {
+      -> ErrorHandling::Result<Socket, std::string> {
     int client_socket =
         ::accept(m_socket_fd, (::sockaddr *)&address, &address_length);
     if (client_socket == -1) {
@@ -170,7 +169,7 @@ public:
                       ErrorHandling::format_source_location(),
                       ErrorHandling::get_error_message(errno)));
     }
-    return ErrorHandling::Ok(SocketResource(client_socket));
+    return ErrorHandling::Ok(Socket(client_socket));
   }
 
   template <typename T>

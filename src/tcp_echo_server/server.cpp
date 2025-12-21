@@ -1,6 +1,6 @@
 #include <arpa/inet.h>
 #include <atomic>
-#include <cpp_playground/networking/socket_resource.hpp>
+#include <cpp_playground/networking/socket.hpp>
 #include <csignal>
 #include <cstdint>
 #include <cstdlib>
@@ -30,8 +30,7 @@ int main() {
   server_address.sin_addr.s_addr = INADDR_ANY;
 
   const auto server_socket =
-      Networking::SocketResource::create_socket(AF_INET, SOCK_STREAM, 0)
-          .unwrap();
+      Networking::Socket::create_socket(AF_INET, SOCK_STREAM, 0).unwrap();
   server_socket.bind(server_address).unwrap();
   server_socket.listen(DefaultListenBacklog).unwrap();
 
