@@ -24,16 +24,13 @@ int main() {
 
   // send message
   std::string message = "Hello world!";
-  client_socket.write(message.size()).unwrap();
-  client_socket.write_exactly(message).unwrap();
+  client_socket.write(message).unwrap();
 
   // read reply
-  const std::size_t message_size = client_socket.read<std::size_t>().unwrap();
-  std::println("Receiving {} byte message", message_size);
-  message.resize(message_size);
-  std::span<std::byte> message_span((std::byte *)message.data(), message_size);
-  client_socket.read_exactly(message_span).unwrap();
-  std::println("Received message: {}", message);
+  message.resize(1024);
+  client_socket.read(message).unwrap();
+
+  std::println("Received reply: {}", message);
 
   return EXIT_SUCCESS;
 }

@@ -37,24 +37,22 @@ int main() {
   ::sockaddr_in client_address = {};
   ::socklen_t client_address_length = sizeof(client_address);
 
+  std::string buffer(1024, '\0');
+  const std::string reply("This is the reply from the server!");
+
   while (!stop_flag.load()) {
+    buffer.resize(1024);
+
     const auto client_socket =
         server_socket.accept(client_address, client_address_length).unwrap();
     std::println("Accepted connection from {}", client_address);
-    const std::size_t message_size = client_socket.read<std::size_t>().unwrap();
-    std::println("Receiving {} byte message", message_size);
 
     // read message
-    std::string message(message_size, '\0');
-    std::span<std::byte> message_span((std::byte *)message.data(),
-                                      message_size);
-    client_socket.read_exactly(message_span).unwrap();
-    std::println("Received message: {}", message);
+    client_socket.read(buffer).unwrap();
+    std::println("Received message: {}", buffer);
 
     // send reply
-    message = "This is the reply from the server!";
-    client_socket.write(message.size()).unwrap();
-    client_socket.write_exactly(message).unwrap();
+    client_socket.write_exactly(reply).unwrap();
   }
 
   return EXIT_SUCCESS;
