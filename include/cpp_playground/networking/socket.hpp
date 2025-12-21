@@ -34,17 +34,17 @@ template <> struct std::formatter<::sockaddr_in> {
 namespace CppPlayground::Networking {
 class Socket {
 private:
-  int m_socket_fd;
+  int m_socket_fd = -1;
 
-  explicit Socket(const int socket_fd) : m_socket_fd(socket_fd) {}
+  explicit Socket(const int socket_fd) noexcept : m_socket_fd(socket_fd) {}
 
 public:
   static auto manage_socket(const int socket_fd) -> Socket {
     return Socket(socket_fd);
   }
 
-  static auto create_socket(const int domain, const int type,
-                            const int protocol)
+  [[nodiscard]] static auto create_socket(const int domain, const int type,
+                                          const int protocol)
       -> ErrorHandling::Result<Socket, std::string> {
     const int socket_fd = ::socket(domain, type, protocol);
     if (socket_fd == -1) {
@@ -192,7 +192,7 @@ public:
     return {};
   }
 
-  [[nodiscard]] auto write(const std::span<std::byte> &data) const
+  [[nodiscard]] auto write(std::span<std::byte> data) const
       -> ErrorHandling::Result<std::size_t, std::string> {
     const auto bytes_written = ::write(m_socket_fd, data.data(), data.size());
     if (bytes_written == -1) {
@@ -209,7 +209,7 @@ public:
     return write(std::span<std::byte>((std::byte *)data.data(), data.size()));
   }
 
-  [[nodiscard]] auto write_exactly(const std::span<std::byte> &data) const
+  [[nodiscard]] auto write_exactly(std::span<std::byte> data) const
       -> ErrorHandling::Result<void, std::string> {
     auto result = write(data);
     if (!result) {
@@ -249,7 +249,7 @@ public:
     return ErrorHandling::Ok(std::move(value));
   }
 
-  [[nodiscard]] auto read(std::span<std::byte> &data) const
+  [[nodiscard]] auto read(std::span<std::byte> data) const
       -> ErrorHandling::Result<std::size_t, std::string> {
     const auto bytes_read = ::read(m_socket_fd, data.data(), data.size());
     if (bytes_read == -1) {
@@ -261,7 +261,12 @@ public:
     return {static_cast<std::size_t>(bytes_read)};
   }
 
-  [[nodiscard]] auto read_exactly(std::span<std::byte> &data) const
+  [[nodiscard]] auto read(std::string &data) const
+      -> ErrorHandling::Result<std::size_t, std::string> {
+    return read(std::span<std::byte>((std::byte *)data.data(), data.size()));
+  }
+
+  [[nodiscard]] auto read_exactly(std::span<std::byte> data) const
       -> ErrorHandling::Result<std::size_t, std::string> {
     auto result = read(data);
     if (!result) {
