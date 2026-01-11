@@ -32,8 +32,8 @@ TEST_CASE("FixedCapacityVector: Constructors", "[containers]") {
     FixedCapacityVector<uint64_t, Capacity> vector;
     REQUIRE(vector.size() == 0UL);
     REQUIRE(vector.capacity() == Capacity);
-    REQUIRE(vector.is_empty());
-    REQUIRE(!vector.is_full());
+    REQUIRE(vector.empty());
+    REQUIRE(!vector.full());
   }
 
   SECTION("Initializer List Constructor") {
@@ -41,8 +41,8 @@ TEST_CASE("FixedCapacityVector: Constructors", "[containers]") {
       FixedCapacityVector<uint64_t, Capacity> vector = {1UL, 2UL, 3UL};
       REQUIRE(vector.size() == 3UL);
       REQUIRE(vector.capacity() == Capacity);
-      REQUIRE(!vector.is_empty());
-      REQUIRE(vector.is_full());
+      REQUIRE(!vector.empty());
+      REQUIRE(vector.full());
       REQUIRE(vector.front() == 1UL);
       REQUIRE(vector.back() == 3UL);
     }
@@ -57,8 +57,8 @@ TEST_CASE("FixedCapacityVector: Constructors", "[containers]") {
       FixedCapacityVector<uint64_t, Capacity> vector = {};
       REQUIRE(vector.size() == 0UL);
       REQUIRE(vector.capacity() == Capacity);
-      REQUIRE(vector.is_empty());
-      REQUIRE(!vector.is_full());
+      REQUIRE(vector.empty());
+      REQUIRE(!vector.full());
     }
   }
 
@@ -67,8 +67,8 @@ TEST_CASE("FixedCapacityVector: Constructors", "[containers]") {
     FixedCapacityVector<uint64_t, Capacity> copy(vector);
     REQUIRE(copy.size() == 3UL);
     REQUIRE(copy.capacity() == Capacity);
-    REQUIRE(!copy.is_empty());
-    REQUIRE(copy.is_full());
+    REQUIRE(!copy.empty());
+    REQUIRE(copy.full());
     REQUIRE(copy.front() == 1UL);
     REQUIRE(copy.back() == 3UL);
   }
@@ -87,8 +87,8 @@ TEST_CASE("FixedCapacityVector: Constructors", "[containers]") {
       FixedCapacityVector<uint64_t, Capacity> copy(vector);
       REQUIRE(copy.size() == 3UL);
       REQUIRE(copy.capacity() == Capacity);
-      REQUIRE(!copy.is_empty());
-      REQUIRE(copy.is_full());
+      REQUIRE(!copy.empty());
+      REQUIRE(copy.full());
       REQUIRE(copy.front() == 1UL);
       REQUIRE(copy.back() == 3UL);
     }
@@ -99,12 +99,12 @@ TEST_CASE("FixedCapacityVector: Constructors", "[containers]") {
     FixedCapacityVector<uint64_t, Capacity> moved(std::move(vector));
     REQUIRE(moved.size() == 3UL);
     REQUIRE(moved.capacity() == Capacity);
-    REQUIRE(!moved.is_empty());
-    REQUIRE(moved.is_full());
+    REQUIRE(!moved.empty());
+    REQUIRE(moved.full());
     REQUIRE(moved.front() == 1UL);
     REQUIRE(moved.back() == 3UL);
 
-    REQUIRE(vector.is_empty());
+    REQUIRE(vector.empty());
   }
 
   SECTION("Move Constructor (different capacity)") {
@@ -122,12 +122,12 @@ TEST_CASE("FixedCapacityVector: Constructors", "[containers]") {
       FixedCapacityVector<uint64_t, Capacity> moved(std::move(vector));
       REQUIRE(moved.size() == 3UL);
       REQUIRE(moved.capacity() == Capacity);
-      REQUIRE(!moved.is_empty());
-      REQUIRE(moved.is_full());
+      REQUIRE(!moved.empty());
+      REQUIRE(moved.full());
       REQUIRE(moved.front() == 1UL);
       REQUIRE(moved.back() == 3UL);
 
-      REQUIRE(vector.is_empty());
+      REQUIRE(vector.empty());
     }
   }
 }
@@ -141,8 +141,8 @@ TEST_CASE_METHOD(
     FixedCapacityVector<ThreadLocalLifetimeTracker, Capacity> vector;
     REQUIRE(vector.size() == 0UL);
     REQUIRE(vector.capacity() == Capacity);
-    REQUIRE(vector.is_empty());
-    REQUIRE(!vector.is_full());
+    REQUIRE(vector.empty());
+    REQUIRE(!vector.full());
     REQUIRE(ThreadLocalLifetimeTracker::num_constructions() == 0);
   }
   REQUIRE(ThreadLocalLifetimeTracker::num_destructions() == 0);
@@ -159,8 +159,8 @@ TEST_CASE_METHOD(
         ThreadLocalLifetimeTracker{}};
     REQUIRE(vector.size() == 3UL);
     REQUIRE(vector.capacity() == Capacity);
-    REQUIRE(!vector.is_empty());
-    REQUIRE(vector.is_full());
+    REQUIRE(!vector.empty());
+    REQUIRE(vector.full());
     REQUIRE(ThreadLocalLifetimeTracker::num_constructions() == 6);
     REQUIRE(ThreadLocalLifetimeTracker::num_default_constructions() == 3);
     REQUIRE(ThreadLocalLifetimeTracker::num_copy_constructions() == 3);
@@ -181,8 +181,8 @@ TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
         vector);
     REQUIRE(copy.size() == 3UL);
     REQUIRE(copy.capacity() == Capacity);
-    REQUIRE(!copy.is_empty());
-    REQUIRE(copy.is_full());
+    REQUIRE(!copy.empty());
+    REQUIRE(copy.full());
     REQUIRE(ThreadLocalLifetimeTracker::num_constructions() == 3);
     REQUIRE(ThreadLocalLifetimeTracker::num_copy_constructions() == 3);
   }
@@ -202,8 +202,8 @@ TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
         std::move(vector));
     REQUIRE(moved.size() == 3UL);
     REQUIRE(moved.capacity() == Capacity);
-    REQUIRE(!moved.is_empty());
-    REQUIRE(moved.is_full());
+    REQUIRE(!moved.empty());
+    REQUIRE(moved.full());
     REQUIRE(ThreadLocalLifetimeTracker::num_constructions() == 3);
     REQUIRE(ThreadLocalLifetimeTracker::num_move_constructions() == 3);
   }
@@ -360,12 +360,12 @@ TEST_CASE("FixedCapacityVector: Modifiers (uint64_t)", "[containers]") {
     REQUIRE(vector.emplace_back(9001) == 9001);
     REQUIRE(vector.size() == 3);
     REQUIRE(vector.back() == 9001);
-    REQUIRE(vector.is_full());
+    REQUIRE(vector.full());
   }
 
   SECTION("pop_back") {
     vector = {1, 2, 3};
-    REQUIRE(!vector.is_empty());
+    REQUIRE(!vector.empty());
 
     vector.pop_back();
     REQUIRE(vector.size() == 2);
@@ -376,12 +376,12 @@ TEST_CASE("FixedCapacityVector: Modifiers (uint64_t)", "[containers]") {
     REQUIRE(vector.back() == 1);
 
     vector.pop_back();
-    REQUIRE(vector.is_empty());
+    REQUIRE(vector.empty());
   }
 
   SECTION("Push/Emplace on full vector throws") {
     vector = {1, 2, 3};
-    REQUIRE(vector.is_full());
+    REQUIRE(vector.full());
     uint64_t value = 4;
     REQUIRE_THROWS_AS(vector.push_back(value), std::length_error);
     REQUIRE_THROWS_AS(vector.push_back(4), std::length_error);
@@ -448,7 +448,7 @@ TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
   vector.emplace_back();
   vector.emplace_back();
   vector.emplace_back();
-  REQUIRE(vector.is_full());
+  REQUIRE(vector.full());
   REQUIRE(ThreadLocalLifetimeTracker::num_default_constructions() == 3);
   REQUIRE(ThreadLocalLifetimeTracker::num_destructions() == 0);
 
@@ -461,6 +461,6 @@ TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
   REQUIRE(ThreadLocalLifetimeTracker::num_destructions() == 2);
 
   vector.pop_back();
-  REQUIRE(vector.is_empty());
+  REQUIRE(vector.empty());
   REQUIRE(ThreadLocalLifetimeTracker::num_destructions() == 3);
 }

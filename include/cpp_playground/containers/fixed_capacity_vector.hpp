@@ -24,10 +24,6 @@ namespace CppPlayground
     using SizeType = std::size_t;
     /// The type of the elements stored in the vector.
     using ValueType = T;
-    /// A reference to an element.
-    using ReferenceType = T &;
-    /// A const reference to an element.
-    using ConstReferenceType = const T &;
 
     /// Alias for ValueType for compatibility with std::back_inserter
     using value_type = ValueType;
@@ -46,12 +42,13 @@ namespace CppPlayground
     /// The size of a single element in bytes.
     static constexpr SizeType ElementSize = sizeof(ValueType);
 
-    static_assert(Capacity > 0);
+    static_assert(Capacity > 0, "Capacity must be larger than 0");
 
   private:
     SizeType m_size = 0UL;
+
     // NOLINTBEGIN(*-avoid-c-arrays)
-    alignas(ValueType) std::byte m_buffer[Capacity * ElementSize]{};
+    alignas(ValueType) std::byte m_buffer[Capacity * ElementSize];
     // NOLINTEND(*-avoid-c-arrays)
 
   public:
@@ -241,7 +238,7 @@ namespace CppPlayground
      * @brief Checks if the vector is empty.
      * @return true if the vector is empty, false otherwise.
      */
-    [[nodiscard]] constexpr bool is_empty() const noexcept {
+    [[nodiscard]] constexpr bool empty() const noexcept {
       return m_size == 0UL;
     }
 
@@ -249,7 +246,7 @@ namespace CppPlayground
      * @brief Checks if the vector is full.
      * @return true if the vector has reached its capacity, false otherwise.
      */
-    [[nodiscard]] constexpr bool is_full() const noexcept {
+    [[nodiscard]] constexpr bool full() const noexcept {
       return m_size == Capacity;
     }
 
@@ -260,7 +257,7 @@ namespace CppPlayground
      */
     template <typename Self>
     [[nodiscard]] constexpr auto &&front(this Self &&self) {
-      if (self.is_empty()) {
+      if (self.empty()) {
         throw std::out_of_range("FixedCapacityVector: Attempt to access front "
                                 "element of empty vector");
       }
@@ -274,7 +271,7 @@ namespace CppPlayground
      */
     template <typename Self>
     [[nodiscard]] constexpr auto &&back(this Self &&self) {
-      if (self.is_empty()) {
+      if (self.empty()) {
         throw std::out_of_range("FixedCapacityVector: Attempt to access back "
                                 "element of empty vector");
       }
@@ -312,10 +309,8 @@ namespace CppPlayground
      * @return A pointer to the underlying array.
      */
     [[nodiscard]] constexpr T *data() noexcept {
-      // NOLINTBEGIN(*-avoid-c-style-cast,*-pro-type-cstyle-cast)
-      // ReSharper disable once CppCStyleCast
-      return (T *)m_buffer;
-      // NOLINTEND(*-avoid-c-style-cast,*-pro-type-cstyle-cast)
+      // NOLINTNEXTLINE(*-pro-type-reinterpret-cast)
+      return reinterpret_cast<T*>(m_buffer);
     }
 
     /**
@@ -324,17 +319,15 @@ namespace CppPlayground
      * @return A const pointer to the underlying array.
      */
     [[nodiscard]] constexpr const T *data() const noexcept {
-      // NOLINTBEGIN(*-avoid-c-style-cast,*-pro-type-cstyle-cast)
-      // ReSharper disable once CppCStyleCast
-      return (const T *)m_buffer;
-      // NOLINTEND(*-avoid-c-style-cast,*-pro-type-cstyle-cast)
+      // NOLINTNEXTLINE(*-pro-type-reinterpret-cast)
+      return reinterpret_cast<const T*>(m_buffer);
     }
 
     /**
      * @brief Clears the vector, destroying all elements.
      */
     constexpr void clear() noexcept {
-      if (is_empty()) {
+      if (empty()) {
         return;
       }
 
@@ -349,7 +342,7 @@ namespace CppPlayground
      * @throw std::length_error if the vector is full.
      */
     constexpr void push_back(const T &value) {
-      if (is_full()) {
+      if (full()) {
         throw std::length_error("FixedCapacityVector: Attempt to push back "
                                 "element into a full vector");
       }
@@ -362,7 +355,7 @@ namespace CppPlayground
      * @throw std::length_error if the vector is full.
      */
     constexpr void push_back(T &&value) {
-      if (is_full()) {
+      if (full()) {
         throw std::length_error("FixedCapacityVector: Attempt to push back "
                                 "element into a full vector");
       }
@@ -378,8 +371,8 @@ namespace CppPlayground
      * @throw std::length_error if the vector is full.
      */
     template <typename... Args>
-    constexpr ReferenceType emplace_back(Args &&...args) {
-      if (is_full()) {
+    constexpr T& emplace_back(Args &&...args) {
+      if (full()) {
         throw std::length_error("FixedCapacityVector: Attempt to emplace back "
                                 "element into a full vector");
       }
@@ -392,7 +385,7 @@ namespace CppPlayground
      * @throw std::out_of_range if the vector is empty.
      */
     constexpr void pop_back() {
-      if (is_empty()) {
+      if (empty()) {
         throw std::out_of_range("FixedCapacityVector: Attempt to pop back "
                                 "element of empty vector");
       }
