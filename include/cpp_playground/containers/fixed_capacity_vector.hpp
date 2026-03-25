@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <initializer_list>
 #include <iterator>
+#include <memory>
 #include <stdexcept>
 #include <type_traits>
 
@@ -24,9 +25,6 @@ public:
   /// The type of the elements stored in the vector.
   using ValueType = T;
 
-  /// Alias for ValueType for compatibility with std::back_inserter
-  using value_type = ValueType;
-
   /// A mutable random-access iterator.
   using Iterator = T *;
   /// A constant random-access iterator.
@@ -36,12 +34,47 @@ public:
   /// A constant reverse random-access iterator.
   using ConstReverseIterator = std::reverse_iterator<ConstIterator>;
 
+  /// Alias for ValueType for STL compatibility
+  using value_type = ValueType;
+
+  /// Alias for SizeType for STL compatibility
+  using size_type = SizeType;
+
+  /// Difference type for STL compatibility
+  using difference_type = std::ptrdiff_t;
+
+  /// Reference type for STL compatibility
+  using reference = ValueType &;
+
+  /// Const reference type for STL compatibility
+  using const_reference = const ValueType &;
+
+  /// Pointer type for STL compatibility
+  using pointer = ValueType *;
+
+  /// Const pointer type for STL compatibility
+  using const_pointer = const ValueType *;
+
+  /// Iterator type for STL compatibility
+  using iterator = Iterator;
+
+  /// Const iterator type for STL compatibility
+  using const_iterator = ConstIterator;
+
+  /// Reverse iterator type for STL compatibility
+  using reverse_iterator = ReverseIterator;
+
+  /// Const reverse iterator type for STL compatibility
+  using const_reverse_iterator = ConstReverseIterator;
+
   /// The maximum number of elements the vector can hold.
   static constexpr SizeType Capacity = Capacity_;
   /// The size of a single element in bytes.
   static constexpr SizeType ElementSize = sizeof(ValueType);
 
   static_assert(Capacity > 0, "Capacity must be larger than 0");
+
+  template <typename U, std::size_t OtherCap> friend class FixedCapacityVector;
 
 private:
   SizeType m_size = 0UL;
@@ -63,10 +96,10 @@ public:
    * @param other The vector to copy from.
    */
   constexpr FixedCapacityVector(const FixedCapacityVector &other) noexcept(
-      std::is_nothrow_copy_constructible_v<ValueType>)
-      : m_size(other.m_size) {
+      std::is_nothrow_copy_constructible_v<ValueType>) {
     for (SizeType i = 0; i < other.m_size; ++i) {
       new (std::addressof(data()[i])) T(other.data()[i]);
+      ++m_size;
     }
   }
 
@@ -80,6 +113,7 @@ public:
    * capacity.
    */
   template <SizeType OtherCapacity>
+    requires(OtherCapacity != Capacity)
   constexpr FixedCapacityVector(
       const FixedCapacityVector<T, OtherCapacity>
           &other) noexcept(OtherCapacity <= Capacity &&
@@ -101,7 +135,8 @@ public:
    * @param other The vector to move from.
    */
   constexpr FixedCapacityVector(FixedCapacityVector &&other) noexcept(
-      std::is_nothrow_move_constructible_v<ValueType>)
+      std::is_nothrow_move_constructible_v<ValueType> &&
+      std::is_nothrow_destructible_v<ValueType>)
       : m_size(other.m_size) {
     for (SizeType i = 0; i < other.m_size; ++i) {
       new (std::addressof(data()[i])) T(std::move(other.data()[i]));
@@ -120,6 +155,7 @@ public:
    * capacity.
    */
   template <SizeType OtherCapacity>
+    requires(OtherCapacity != Capacity)
   constexpr FixedCapacityVector(
       FixedCapacityVector<T, OtherCapacity>
           &&other) noexcept(OtherCapacity <= Capacity &&
@@ -133,7 +169,7 @@ public:
       ++m_size;
       std::destroy_at(std::addressof(other.data()[i]));
     }
-    other.clear();
+    other.m_size = 0;
   }
 
   /**
@@ -161,6 +197,28 @@ public:
 
   /**
    * @brief Copy assignment operator.
+   * @param other The vector to copy from.
+   * @return A reference to this vector.
+   */
+  constexpr FixedCapacityVector &
+  operator=(const FixedCapacityVector &other) noexcept(
+      std::is_nothrow_copy_constructible_v<ValueType>) {
+    if (this == std::addressof(other)) {
+      return *this;
+    }
+    std::destroy(data(), data() + m_size);
+    m_size = 0;
+    for (SizeType i = 0; i < other.m_size; ++i) {
+      new (std::addressof(data()[i])) T(other.data()[i]);
+      ++m_size;
+    }
+    return *this;
+  }
+
+  /**
+   * @brief Copy assignment operator.
+   * @details Copies elements from another FixedCapacityVector with a different
+   * capacity.
    * @tparam OtherCapacity The capacity of the other vector.
    * @param other The vector to copy from.
    * @return A reference to this vector.
@@ -168,13 +226,16 @@ public:
    * capacity.
    */
   template <SizeType OtherCapacity>
-  constexpr FixedCapacityVector &
-  operator=(const FixedCapacityVector<ValueType, OtherCapacity>
-                &other) noexcept(OtherCapacity <= Capacity &&
-                                 std::is_nothrow_copy_assignable_v<ValueType>) {
-    if (other.m_size > Capacity) {
-      throw std::length_error("FixedCapacityVector: Attempt to copy from a "
-                              "vector with more elements than capacity");
+    requires(OtherCapacity != Capacity)
+  constexpr FixedCapacityVector &operator=(
+      const FixedCapacityVector<ValueType, OtherCapacity>
+          &other) noexcept(OtherCapacity <= Capacity &&
+                           std::is_nothrow_copy_constructible_v<ValueType>) {
+    if constexpr (OtherCapacity > Capacity) {
+      if (other.m_size > Capacity) {
+        throw std::length_error("FixedCapacityVector: Attempt to copy from a "
+                                "vector with more elements than capacity");
+      }
     }
     std::destroy(data(), data() + m_size);
     m_size = 0;
@@ -193,8 +254,31 @@ public:
   constexpr FixedCapacityVector &
   operator=(FixedCapacityVector &&other) noexcept(
       std::is_nothrow_move_constructible_v<ValueType>) {
-    if (this == &other) {
+    if (this == std::addressof(other)) {
       return *this;
+    }
+    clear();
+    for (SizeType i = 0; i < other.m_size; ++i) {
+      new (std::addressof(data()[i])) T(std::move(other.data()[i]));
+      ++m_size;
+      std::destroy_at(std::addressof(other.data()[i]));
+    }
+    other.m_size = 0;
+    return *this;
+  }
+
+  template <SizeType OtherCapacity>
+    requires(OtherCapacity != Capacity)
+  constexpr FixedCapacityVector &
+  operator=(FixedCapacityVector<T, OtherCapacity> &&other) noexcept(
+      (OtherCapacity < Capacity) &&
+      std::is_nothrow_move_assignable_v<ValueType>) {
+    if constexpr (OtherCapacity > Capacity) {
+      if (other.m_size > Capacity) {
+        throw std::length_error(
+            "FixedCapacityVector: Attempt to move-assign from a "
+            "vector with more elements than capacity");
+      }
     }
     clear();
     for (SizeType i = 0; i < other.m_size; ++i) {
@@ -211,8 +295,7 @@ public:
    * @param new_size The new size of the vector.
    * @throw std::length_error if the new size exceeds the vector's capacity.
    */
-  constexpr void resize(const SizeType new_size) noexcept(
-      std::is_nothrow_default_constructible_v<ValueType>) {
+  constexpr void resize(const SizeType new_size) {
     if (m_size == new_size) {
       return;
     }
@@ -234,7 +317,7 @@ public:
    * @brief Returns the maximum number of elements the vector can hold.
    * @return The capacity of the vector.
    */
-  [[nodiscard]] consteval SizeType capacity() const noexcept {
+  [[nodiscard]] constexpr SizeType capacity() const noexcept {
     return Capacity;
   }
 
@@ -309,8 +392,9 @@ public:
    * @brief Returns a pointer to the underlying array serving as element
    * storage.
    * @return A pointer to the underlying array.
+   * @todo Make constexpr when we can use std::start_lifetime_as
    */
-  [[nodiscard]] constexpr T *data() noexcept {
+  [[nodiscard]] T *data() noexcept {
     // NOLINTNEXTLINE(*-pro-type-reinterpret-cast)
     return reinterpret_cast<T *>(m_buffer);
   }
@@ -319,8 +403,9 @@ public:
    * @brief Returns a const pointer to the underlying array serving as element
    * storage.
    * @return A const pointer to the underlying array.
+   * @todo Make constexpr when we can use std::start_lifetime_as
    */
-  [[nodiscard]] constexpr const T *data() const noexcept {
+  [[nodiscard]] const T *data() const noexcept {
     // NOLINTNEXTLINE(*-pro-type-reinterpret-cast)
     return reinterpret_cast<const T *>(m_buffer);
   }

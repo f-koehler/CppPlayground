@@ -337,7 +337,16 @@ TEST_CASE("FixedCapacityVector: Modification Through Iterators",
   REQUIRE(copy.at(1) == 4UL);
   REQUIRE(copy.at(2) == 2UL);
 
+  // GCC's -Warray-bounds produces false positives here because it cannot see
+  // through the reinterpret_cast in data() to determine the actual buffer size.
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#endif
   std::ranges::sort(copy);
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
   REQUIRE(copy.at(0) == 2UL);
   REQUIRE(copy.at(1) == 4UL);
   REQUIRE(copy.at(2) == 6UL);
