@@ -3,7 +3,7 @@ name = "cpp-playground"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.14"
 dependencies = [
     "breathe>=4.36.0",
     "sphinx>=8.2.3",
