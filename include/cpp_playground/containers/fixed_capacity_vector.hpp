@@ -74,7 +74,7 @@ public:
 
   static_assert(Capacity > 0, "Capacity must be larger than 0");
 
-  template <typename U, std::size_t OtherCap> friend class FixedCapacityVector;
+  template <typename U, std::size_t OtherCapacity> friend class FixedCapacityVector;
 
 private:
   SizeType m_size = 0UL;
