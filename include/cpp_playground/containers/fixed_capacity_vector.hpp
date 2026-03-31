@@ -98,7 +98,7 @@ public:
   constexpr FixedCapacityVector(const FixedCapacityVector &other) noexcept(
       std::is_nothrow_copy_constructible_v<ValueType>) {
     for (SizeType i = 0; i < other.m_size; ++i) {
-      new (std::addressof(data()[i])) T(other.data()[i]);
+      new (data() + i) T(other.data()[i]);
       ++m_size;
     }
   }
@@ -124,7 +124,7 @@ public:
     }
     for (SizeType i = 0; i < other.size(); ++i) {
       // use placement new operator to copy construct objects at the right place
-      new (std::addressof(data()[i])) T(other.data()[i]);
+      new (data() + i) T(other.data()[i]);
       ++m_size;
     }
   }
@@ -139,8 +139,8 @@ public:
       std::is_nothrow_destructible_v<ValueType>)
       : m_size(other.m_size) {
     for (SizeType i = 0; i < other.m_size; ++i) {
-      new (std::addressof(data()[i])) T(std::move(other.data()[i]));
-      std::destroy_at(std::addressof(other.data()[i]));
+      new (data() + i) T(std::move(other.data()[i]));
+      std::destroy_at(other.data() + i);
     }
     other.m_size = 0;
   }
@@ -165,9 +165,9 @@ public:
                               "vector with more elements than capacity");
     }
     for (SizeType i = 0; i < other.size(); ++i) {
-      new (std::addressof(data()[i])) T(std::move(other.data()[i]));
+      new (data() + i) T(std::move(other.data()[i]));
       ++m_size;
-      std::destroy_at(std::addressof(other.data()[i]));
+      std::destroy_at(other.data() + i);
     }
     other.m_size = 0;
   }
@@ -186,7 +186,8 @@ public:
                               "more elements than capacity");
     }
     for (const auto &item : init) {
-      new (std::addressof(data()[m_size++])) T(item);
+      new (data() + m_size) T(item);
+      ++m_size;
     }
   }
 
@@ -209,7 +210,7 @@ public:
     std::destroy(data(), data() + m_size);
     m_size = 0;
     for (SizeType i = 0; i < other.m_size; ++i) {
-      new (std::addressof(data()[i])) T(other.data()[i]);
+      new (data() + i) T(other.data()[i]);
       ++m_size;
     }
     return *this;
@@ -240,7 +241,7 @@ public:
     std::destroy(data(), data() + m_size);
     m_size = 0;
     for (SizeType i = 0; i < other.m_size; ++i) {
-      new (std::addressof(data()[i])) T(other.data()[i]);
+      new (data() + i) T(other.data()[i]);
       ++m_size;
     }
     return *this;
@@ -259,9 +260,9 @@ public:
     }
     clear();
     for (SizeType i = 0; i < other.m_size; ++i) {
-      new (std::addressof(data()[i])) T(std::move(other.data()[i]));
+      new (data() + i) T(std::move(other.data()[i]));
       ++m_size;
-      std::destroy_at(std::addressof(other.data()[i]));
+      std::destroy_at(other.data() + i);
     }
     other.m_size = 0;
     return *this;
@@ -282,9 +283,9 @@ public:
     }
     clear();
     for (SizeType i = 0; i < other.m_size; ++i) {
-      new (std::addressof(data()[i])) T(std::move(other.data()[i]));
+      new (data() + i) T(std::move(other.data()[i]));
       ++m_size;
-      std::destroy_at(std::addressof(other.data()[i]));
+      std::destroy_at(other.data() + i);
     }
     other.m_size = 0;
     return *this;
@@ -433,7 +434,8 @@ public:
       throw std::length_error("FixedCapacityVector: Attempt to push back "
                               "element into a full vector");
     }
-    new (std::addressof(data()[m_size++])) T(value);
+    new (data() + m_size) T(value);
+    ++m_size;
   }
 
   /**
@@ -446,7 +448,8 @@ public:
       throw std::length_error("FixedCapacityVector: Attempt to push back "
                               "element into a full vector");
     }
-    new (std::addressof(data()[m_size++])) T(std::move(value));
+    new (data() + m_size) T(std::move(value));
+    ++m_size;
   }
 
   /**
@@ -462,7 +465,8 @@ public:
       throw std::length_error("FixedCapacityVector: Attempt to emplace back "
                               "element into a full vector");
     }
-    new (std::addressof(data()[m_size++])) T(std::forward<Args>(args)...);
+    new (data() + m_size) T(std::forward<Args>(args)...);
+    ++m_size;
     return data()[m_size - 1];
   }
 
@@ -475,7 +479,8 @@ public:
       throw std::out_of_range("FixedCapacityVector: Attempt to pop back "
                               "element of empty vector");
     }
-    std::destroy_at(std::addressof(data()[--m_size]));
+    --m_size;
+    std::destroy_at(data() + m_size);
   }
 
   /**
