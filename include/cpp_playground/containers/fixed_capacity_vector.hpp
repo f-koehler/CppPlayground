@@ -136,10 +136,10 @@ public:
    */
   constexpr FixedCapacityVector(FixedCapacityVector &&other) noexcept(
       std::is_nothrow_move_constructible_v<ValueType> &&
-      std::is_nothrow_destructible_v<ValueType>)
-      : m_size(other.m_size) {
+      std::is_nothrow_destructible_v<ValueType>) {
     for (SizeType i = 0; i < other.m_size; ++i) {
       new (data() + i) T(std::move(other.data()[i]));
+      ++m_size;
       std::destroy_at(other.data() + i);
     }
     other.m_size = 0;
@@ -273,7 +273,7 @@ public:
   constexpr FixedCapacityVector &
   operator=(FixedCapacityVector<T, OtherCapacity> &&other) noexcept(
       (OtherCapacity < Capacity) &&
-      std::is_nothrow_move_assignable_v<ValueType>) {
+      std::is_nothrow_move_constructible_v<ValueType>) {
     if constexpr (OtherCapacity > Capacity) {
       if (other.m_size > Capacity) {
         throw std::length_error(
@@ -393,7 +393,10 @@ public:
    * @brief Returns a pointer to the underlying array serving as element
    * storage.
    * @return A pointer to the underlying array.
-   * @todo Make constexpr when we can use std::start_lifetime_as
+   * @note Cannot be constexpr: reinterpret_cast is forbidden during constant
+   * evaluation. std::start_lifetime_as (C++23) makes the runtime
+   * reinterpretation well-defined but is not itself constexpr; constexpr would
+   * require union-based storage instead of a std::byte buffer.
    */
   [[nodiscard]] T *data() noexcept {
     // NOLINTNEXTLINE(*-pro-type-reinterpret-cast)
@@ -404,7 +407,10 @@ public:
    * @brief Returns a const pointer to the underlying array serving as element
    * storage.
    * @return A const pointer to the underlying array.
-   * @todo Make constexpr when we can use std::start_lifetime_as
+   * @note Cannot be constexpr: reinterpret_cast is forbidden during constant
+   * evaluation. std::start_lifetime_as (C++23) makes the runtime
+   * reinterpretation well-defined but is not itself constexpr; constexpr would
+   * require union-based storage instead of a std::byte buffer.
    */
   [[nodiscard]] const T *data() const noexcept {
     // NOLINTNEXTLINE(*-pro-type-reinterpret-cast)
@@ -515,7 +521,7 @@ public:
    * @return A reverse iterator to the first element of the reversed vector.
    */
   template <typename Self>
-  [[nodiscard]] constexpr auto rbegin(this Self &&self) noexcept {
+  [[nodiscard]] auto rbegin(this Self &&self) noexcept {
     return std::make_reverse_iterator(std::forward<Self>(self).end());
   }
 
@@ -525,14 +531,14 @@ public:
    * @return A const reverse iterator to the first element of the reversed
    * vector.
    */
-  [[nodiscard]] constexpr auto crbegin() const noexcept { return rbegin(); }
+  [[nodiscard]] auto crbegin() const noexcept { return rbegin(); }
   /**
    * @brief Returns a reverse iterator to the end of the reversed vector.
    * @return A reverse iterator to the element following the last element of the
    * reversed vector.
    */
   template <typename Self>
-  [[nodiscard]] constexpr auto rend(this Self &&self) noexcept {
+  [[nodiscard]] auto rend(this Self &&self) noexcept {
     return std::make_reverse_iterator(std::forward<Self>(self).begin());
   }
 
@@ -541,7 +547,7 @@ public:
    * @return A const reverse iterator to the element following the last element
    * of the reversed vector.
    */
-  [[nodiscard]] constexpr auto crend() const noexcept { return rend(); }
+  [[nodiscard]] auto crend() const noexcept { return rend(); }
 };
 } // namespace CppPlayground
 
