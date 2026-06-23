@@ -13,34 +13,34 @@ using namespace CppPlayground;
 using namespace CppPlayground::Testing;
 
 TEST_CASE("FixedCapacityVector: Check Type Size", "[containers]") {
-  static constexpr auto PointerSize = sizeof(std::byte *);
-  REQUIRE(sizeof(FixedCapacityVector<uint64_t, 1>) == PointerSize + 8);
-  REQUIRE(sizeof(FixedCapacityVector<uint64_t, 8>) == PointerSize + 64);
-  REQUIRE(sizeof(FixedCapacityVector<uint64_t, 13>) == PointerSize + 104);
+  static constexpr auto pointer_size = sizeof(std::byte *);
+  REQUIRE(sizeof(FixedCapacityVector<uint64_t, 1>) == pointer_size + 8);
+  REQUIRE(sizeof(FixedCapacityVector<uint64_t, 8>) == pointer_size + 64);
+  REQUIRE(sizeof(FixedCapacityVector<uint64_t, 13>) == pointer_size + 104);
   REQUIRE(sizeof(FixedCapacityVector<std::byte, 1>) ==
-          2 * PointerSize); // due to alignment
-  REQUIRE(sizeof(FixedCapacityVector<std::byte, 8>) == PointerSize + 8);
+          2 * pointer_size); // due to alignment
+  REQUIRE(sizeof(FixedCapacityVector<std::byte, 8>) == pointer_size + 8);
   REQUIRE(sizeof(FixedCapacityVector<std::byte, 13>) ==
-          3 * PointerSize); // due to alignment
+          3 * pointer_size); // due to alignment
   REQUIRE(sizeof(FixedCapacityVector<std::tuple<uint64_t, uint32_t>, 1>) == 24);
   REQUIRE(sizeof(FixedCapacityVector<std::tuple<uint64_t, uint32_t>, 2>) == 40);
 }
 
 TEST_CASE("FixedCapacityVector: Constructors", "[containers]") {
-  constexpr uint64_t Capacity = 3UL;
+  constexpr uint64_t capacity = 3UL;
   SECTION("Default Constructor") {
-    FixedCapacityVector<uint64_t, Capacity> vector;
+    FixedCapacityVector<uint64_t, capacity> vector;
     REQUIRE(vector.size() == 0UL);
-    REQUIRE(vector.capacity() == Capacity);
+    REQUIRE(vector.capacity() == capacity);
     REQUIRE(vector.empty());
     REQUIRE(!vector.full());
   }
 
   SECTION("Initializer List Constructor") {
     SECTION("Nominal") {
-      FixedCapacityVector<uint64_t, Capacity> vector = {1UL, 2UL, 3UL};
+      FixedCapacityVector<uint64_t, capacity> vector = {1UL, 2UL, 3UL};
       REQUIRE(vector.size() == 3UL);
-      REQUIRE(vector.capacity() == Capacity);
+      REQUIRE(vector.capacity() == capacity);
       REQUIRE(!vector.empty());
       REQUIRE(vector.full());
       REQUIRE(vector.front() == 1UL);
@@ -49,24 +49,24 @@ TEST_CASE("FixedCapacityVector: Constructors", "[containers]") {
 
     SECTION("Input too large") {
       REQUIRE_THROWS_AS(
-          (FixedCapacityVector<uint64_t, Capacity>{1UL, 2UL, 3UL, 4UL}),
+          (FixedCapacityVector<uint64_t, capacity>{1UL, 2UL, 3UL, 4UL}),
           std::length_error);
     }
 
     SECTION("Empty list") {
-      FixedCapacityVector<uint64_t, Capacity> vector = {};
+      FixedCapacityVector<uint64_t, capacity> vector = {};
       REQUIRE(vector.size() == 0UL);
-      REQUIRE(vector.capacity() == Capacity);
+      REQUIRE(vector.capacity() == capacity);
       REQUIRE(vector.empty());
       REQUIRE(!vector.full());
     }
   }
 
   SECTION("Copy Constructor") {
-    FixedCapacityVector<uint64_t, Capacity> vector = {1UL, 2UL, 3UL};
-    FixedCapacityVector<uint64_t, Capacity> copy(vector);
+    FixedCapacityVector<uint64_t, capacity> vector = {1UL, 2UL, 3UL};
+    FixedCapacityVector<uint64_t, capacity> copy(vector);
     REQUIRE(copy.size() == 3UL);
-    REQUIRE(copy.capacity() == Capacity);
+    REQUIRE(copy.capacity() == capacity);
     REQUIRE(!copy.empty());
     REQUIRE(copy.full());
     REQUIRE(copy.front() == 1UL);
@@ -74,19 +74,19 @@ TEST_CASE("FixedCapacityVector: Constructors", "[containers]") {
   }
 
   SECTION("Copy Constructor (different capacity)") {
-    constexpr uint64_t OtherCapacity = Capacity + 1;
+    constexpr uint64_t other_capacity = capacity + 1;
     SECTION("Input too large") {
-      FixedCapacityVector<uint64_t, OtherCapacity> vector = {1UL, 2UL, 3UL,
+      FixedCapacityVector<uint64_t, other_capacity> vector = {1UL, 2UL, 3UL,
                                                              4UL};
-      REQUIRE_THROWS_AS((FixedCapacityVector<uint64_t, Capacity>(vector)),
+      REQUIRE_THROWS_AS((FixedCapacityVector<uint64_t, capacity>(vector)),
                         std::length_error);
     }
 
     SECTION("Input fits") {
-      FixedCapacityVector<uint64_t, OtherCapacity> vector = {1UL, 2UL, 3UL};
-      FixedCapacityVector<uint64_t, Capacity> copy(vector);
+      FixedCapacityVector<uint64_t, other_capacity> vector = {1UL, 2UL, 3UL};
+      FixedCapacityVector<uint64_t, capacity> copy(vector);
       REQUIRE(copy.size() == 3UL);
-      REQUIRE(copy.capacity() == Capacity);
+      REQUIRE(copy.capacity() == capacity);
       REQUIRE(!copy.empty());
       REQUIRE(copy.full());
       REQUIRE(copy.front() == 1UL);
@@ -95,10 +95,10 @@ TEST_CASE("FixedCapacityVector: Constructors", "[containers]") {
   }
 
   SECTION("Move constructor") {
-    FixedCapacityVector<uint64_t, Capacity> vector = {1UL, 2UL, 3UL};
-    FixedCapacityVector<uint64_t, Capacity> moved(std::move(vector));
+    FixedCapacityVector<uint64_t, capacity> vector = {1UL, 2UL, 3UL};
+    FixedCapacityVector<uint64_t, capacity> moved(std::move(vector));
     REQUIRE(moved.size() == 3UL);
-    REQUIRE(moved.capacity() == Capacity);
+    REQUIRE(moved.capacity() == capacity);
     REQUIRE(!moved.empty());
     REQUIRE(moved.full());
     REQUIRE(moved.front() == 1UL);
@@ -108,20 +108,20 @@ TEST_CASE("FixedCapacityVector: Constructors", "[containers]") {
   }
 
   SECTION("Move Constructor (different capacity)") {
-    constexpr uint64_t OtherCapacity = Capacity + 1;
+    constexpr uint64_t other_capacity = capacity + 1;
     SECTION("Input too large") {
-      FixedCapacityVector<uint64_t, OtherCapacity> vector = {1UL, 2UL, 3UL,
+      FixedCapacityVector<uint64_t, other_capacity> vector = {1UL, 2UL, 3UL,
                                                              4UL};
       REQUIRE_THROWS_AS(
-          (FixedCapacityVector<uint64_t, Capacity>(std::move(vector))),
+          (FixedCapacityVector<uint64_t, capacity>(std::move(vector))),
           std::length_error);
     }
 
     SECTION("Input fits") {
-      FixedCapacityVector<uint64_t, OtherCapacity> vector = {1UL, 2UL, 3UL};
-      FixedCapacityVector<uint64_t, Capacity> moved(std::move(vector));
+      FixedCapacityVector<uint64_t, other_capacity> vector = {1UL, 2UL, 3UL};
+      FixedCapacityVector<uint64_t, capacity> moved(std::move(vector));
       REQUIRE(moved.size() == 3UL);
-      REQUIRE(moved.capacity() == Capacity);
+      REQUIRE(moved.capacity() == capacity);
       REQUIRE(!moved.empty());
       REQUIRE(moved.full());
       REQUIRE(moved.front() == 1UL);
@@ -136,11 +136,11 @@ TEST_CASE_METHOD(
     ThreadLocalLifetimeTrackerFixture,
     "FixedCapacityVector: default constructor with lifetime tracker",
     "[containers]") {
-  constexpr uint64_t Capacity = 3UL;
+  constexpr uint64_t capacity = 3UL;
   {
-    FixedCapacityVector<ThreadLocalLifetimeTracker, Capacity> vector;
+    FixedCapacityVector<ThreadLocalLifetimeTracker, capacity> vector;
     REQUIRE(vector.size() == 0UL);
-    REQUIRE(vector.capacity() == Capacity);
+    REQUIRE(vector.capacity() == capacity);
     REQUIRE(vector.empty());
     REQUIRE(!vector.full());
     REQUIRE(ThreadLocalLifetimeTracker::num_constructions() == 0);
@@ -152,13 +152,13 @@ TEST_CASE_METHOD(
     ThreadLocalLifetimeTrackerFixture,
     "FixedCapacityVector: initializer list constructor with lifetime tracker",
     "[containers]") {
-  constexpr uint64_t Capacity = 3UL;
+  constexpr uint64_t capacity = 3UL;
   {
-    const FixedCapacityVector<ThreadLocalLifetimeTracker, Capacity> vector = {
+    const FixedCapacityVector<ThreadLocalLifetimeTracker, capacity> vector = {
         ThreadLocalLifetimeTracker{}, ThreadLocalLifetimeTracker{},
         ThreadLocalLifetimeTracker{}};
     REQUIRE(vector.size() == 3UL);
-    REQUIRE(vector.capacity() == Capacity);
+    REQUIRE(vector.capacity() == capacity);
     REQUIRE(!vector.empty());
     REQUIRE(vector.full());
     REQUIRE(ThreadLocalLifetimeTracker::num_constructions() == 6);
@@ -171,16 +171,16 @@ TEST_CASE_METHOD(
 TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
                  "FixedCapacityVector: copy constructor with lifetime tracker",
                  "[containers]") {
-  constexpr uint64_t Capacity = 3UL;
-  const FixedCapacityVector<ThreadLocalLifetimeTracker, Capacity> vector = {
+  constexpr uint64_t capacity = 3UL;
+  const FixedCapacityVector<ThreadLocalLifetimeTracker, capacity> vector = {
       ThreadLocalLifetimeTracker{}, ThreadLocalLifetimeTracker{},
       ThreadLocalLifetimeTracker{}};
   {
     ThreadLocalLifetimeTracker::reset();
-    const FixedCapacityVector<ThreadLocalLifetimeTracker, Capacity> copy(
+    const FixedCapacityVector<ThreadLocalLifetimeTracker, capacity> copy(
         vector);
     REQUIRE(copy.size() == 3UL);
-    REQUIRE(copy.capacity() == Capacity);
+    REQUIRE(copy.capacity() == capacity);
     REQUIRE(!copy.empty());
     REQUIRE(copy.full());
     REQUIRE(ThreadLocalLifetimeTracker::num_constructions() == 3);
@@ -192,16 +192,16 @@ TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
 TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
                  "FixedCapacityVector: move constructor with lifetime tracker",
                  "[containers]") {
-  constexpr uint64_t Capacity = 3UL;
-  FixedCapacityVector<ThreadLocalLifetimeTracker, Capacity> vector = {
+  constexpr uint64_t capacity = 3UL;
+  FixedCapacityVector<ThreadLocalLifetimeTracker, capacity> vector = {
       ThreadLocalLifetimeTracker{}, ThreadLocalLifetimeTracker{},
       ThreadLocalLifetimeTracker{}};
   {
     ThreadLocalLifetimeTracker::reset();
-    const FixedCapacityVector<ThreadLocalLifetimeTracker, Capacity> moved(
+    const FixedCapacityVector<ThreadLocalLifetimeTracker, capacity> moved(
         std::move(vector));
     REQUIRE(moved.size() == 3UL);
-    REQUIRE(moved.capacity() == Capacity);
+    REQUIRE(moved.capacity() == capacity);
     REQUIRE(!moved.empty());
     REQUIRE(moved.full());
     REQUIRE(ThreadLocalLifetimeTracker::num_constructions() == 3);
@@ -353,8 +353,8 @@ TEST_CASE("FixedCapacityVector: Modification Through Iterators",
 }
 
 TEST_CASE("FixedCapacityVector: Modifiers (uint64_t)", "[containers]") {
-  constexpr uint64_t Capacity = 3UL;
-  FixedCapacityVector<uint64_t, Capacity> vector;
+  constexpr uint64_t capacity = 3UL;
+  FixedCapacityVector<uint64_t, capacity> vector;
 
   SECTION("push_back l-value, r-value, and emplace_back") {
     uint64_t value = 42;
@@ -405,10 +405,10 @@ TEST_CASE("FixedCapacityVector: Modifiers (uint64_t)", "[containers]") {
 
 TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
                  "FixedCapacityVector: push_back (l-value)", "[containers]") {
-  constexpr uint64_t Capacity = 3UL;
+  constexpr uint64_t capacity = 3UL;
 
   {
-    FixedCapacityVector<ThreadLocalLifetimeTracker, Capacity> vector;
+    FixedCapacityVector<ThreadLocalLifetimeTracker, capacity> vector;
     ThreadLocalLifetimeTracker tracker;
     REQUIRE(ThreadLocalLifetimeTracker::num_default_constructions() == 1);
     vector.push_back(tracker);
@@ -422,10 +422,10 @@ TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
 
 TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
                  "FixedCapacityVector: push_back (r-value)", "[containers]") {
-  constexpr uint64_t Capacity = 3UL;
+  constexpr uint64_t capacity = 3UL;
 
   {
-    FixedCapacityVector<ThreadLocalLifetimeTracker, Capacity> vector;
+    FixedCapacityVector<ThreadLocalLifetimeTracker, capacity> vector;
     vector.push_back(ThreadLocalLifetimeTracker{});
     REQUIRE(ThreadLocalLifetimeTracker::num_default_constructions() == 1);
     REQUIRE(vector.size() == 1);
@@ -438,10 +438,10 @@ TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
 TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
                  "FixedCapacityVector: emplace_back (r-value)",
                  "[containers]") {
-  constexpr uint64_t Capacity = 3UL;
+  constexpr uint64_t capacity = 3UL;
 
   {
-    FixedCapacityVector<ThreadLocalLifetimeTracker, Capacity> vector;
+    FixedCapacityVector<ThreadLocalLifetimeTracker, capacity> vector;
     vector.emplace_back();
     REQUIRE(ThreadLocalLifetimeTracker::num_default_constructions() == 1);
     REQUIRE(vector.size() == 1);
@@ -452,8 +452,8 @@ TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
 
 TEST_CASE_METHOD(ThreadLocalLifetimeTrackerFixture,
                  "FixedCapacityVector: pop_back", "[containers]") {
-  constexpr uint64_t Capacity = 3;
-  FixedCapacityVector<ThreadLocalLifetimeTracker, Capacity> vector;
+  constexpr uint64_t capacity = 3;
+  FixedCapacityVector<ThreadLocalLifetimeTracker, capacity> vector;
   vector.emplace_back();
   vector.emplace_back();
   vector.emplace_back();

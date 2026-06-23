@@ -16,9 +16,9 @@ namespace CppPlayground {
  * dynamic memory allocation. This is useful for real-time and
  * performance-critical applications where heap allocation is undesirable.
  * @tparam T The type of elements to be stored.
- * @tparam Capacity_ The maximum number of elements the vector can hold.
+ * @tparam capacity_ The maximum number of elements the vector can hold.
  */
-template <typename T, std::size_t Capacity_> class FixedCapacityVector {
+template <typename T, std::size_t capacity_> class FixedCapacityVector {
 public:
   /// The type used for size and capacity.
   using SizeType = std::size_t;
@@ -68,19 +68,19 @@ public:
   using const_reverse_iterator = ConstReverseIterator;
 
   /// The maximum number of elements the vector can hold.
-  static constexpr SizeType Capacity = Capacity_;
+  static constexpr SizeType capacity_value = capacity_;
   /// The size of a single element in bytes.
-  static constexpr SizeType ElementSize = sizeof(ValueType);
+  static constexpr SizeType element_size = sizeof(ValueType);
 
-  static_assert(Capacity > 0, "Capacity must be larger than 0");
+  static_assert(capacity_value > 0, "Capacity must be larger than 0");
 
-  template <typename U, std::size_t OtherCapacity> friend class FixedCapacityVector;
+  template <typename U, std::size_t other_capacity> friend class FixedCapacityVector;
 
 private:
   SizeType m_size = 0UL;
 
   // NOLINTBEGIN(*-avoid-c-arrays)
-  alignas(ValueType) std::byte m_buffer[Capacity * ElementSize];
+  alignas(ValueType) std::byte m_buffer[capacity_value * element_size];
   // NOLINTEND(*-avoid-c-arrays)
 
 public:
@@ -107,18 +107,18 @@ public:
    * @brief Copy constructor.
    * @details Copies elements from another FixedCapacityVector. The other vector
    * can have a different capacity.
-   * @tparam OtherCapacity The capacity of the other vector.
+   * @tparam other_capacity The capacity of the other vector.
    * @param other The vector to copy from.
    * @throw std::length_error if the other vector's size exceeds this vector's
    * capacity.
    */
-  template <SizeType OtherCapacity>
-    requires(OtherCapacity != Capacity)
+  template <SizeType other_capacity>
+    requires(other_capacity != capacity_value)
   constexpr FixedCapacityVector(
-      const FixedCapacityVector<T, OtherCapacity>
-          &other) noexcept(OtherCapacity <= Capacity &&
+      const FixedCapacityVector<T, other_capacity>
+          &other) noexcept(other_capacity <= capacity_value &&
                            std::is_nothrow_copy_constructible_v<ValueType>) {
-    if (other.size() > Capacity) {
+    if (other.size() > capacity_value) {
       throw std::length_error("FixedCapacityVector: Attempt to copy from a "
                               "vector with more elements than capacity");
     }
@@ -149,18 +149,18 @@ public:
    * @brief Move constructor.
    * @details Moves elements from another FixedCapacityVector. The other vector
    * can have a different capacity.
-   * @tparam OtherCapacity The capacity of the other vector.
+   * @tparam other_capacity The capacity of the other vector.
    * @param other The vector to move from.
    * @throw std::length_error if the other vector's size exceeds this vector's
    * capacity.
    */
-  template <SizeType OtherCapacity>
-    requires(OtherCapacity != Capacity)
+  template <SizeType other_capacity>
+    requires(other_capacity != capacity_value)
   constexpr FixedCapacityVector(
-      FixedCapacityVector<T, OtherCapacity>
-          &&other) noexcept(OtherCapacity <= Capacity &&
+      FixedCapacityVector<T, other_capacity>
+          &&other) noexcept(other_capacity <= capacity_value &&
                             std::is_nothrow_move_constructible_v<ValueType>) {
-    if (other.size() > Capacity) {
+    if (other.size() > capacity_value) {
       throw std::length_error("FixedCapacityVector: Attempt to move from a "
                               "vector with more elements than capacity");
     }
@@ -181,7 +181,7 @@ public:
    * vector's capacity.
    */
   constexpr FixedCapacityVector(std::initializer_list<T> init) {
-    if (init.size() > Capacity) {
+    if (init.size() > capacity_value) {
       throw std::length_error("FixedCapacityVector: Attempt to initialize with "
                               "more elements than capacity");
     }
@@ -220,20 +220,20 @@ public:
    * @brief Copy assignment operator.
    * @details Copies elements from another FixedCapacityVector with a different
    * capacity.
-   * @tparam OtherCapacity The capacity of the other vector.
+   * @tparam other_capacity The capacity of the other vector.
    * @param other The vector to copy from.
    * @return A reference to this vector.
    * @throw std::length_error if the other vector's size exceeds this vector's
    * capacity.
    */
-  template <SizeType OtherCapacity>
-    requires(OtherCapacity != Capacity)
+  template <SizeType other_capacity>
+    requires(other_capacity != capacity_value)
   constexpr FixedCapacityVector &operator=(
-      const FixedCapacityVector<ValueType, OtherCapacity>
-          &other) noexcept(OtherCapacity <= Capacity &&
+      const FixedCapacityVector<ValueType, other_capacity>
+          &other) noexcept(other_capacity <= capacity_value &&
                            std::is_nothrow_copy_constructible_v<ValueType>) {
-    if constexpr (OtherCapacity > Capacity) {
-      if (other.m_size > Capacity) {
+    if constexpr (other_capacity > capacity_value) {
+      if (other.m_size > capacity_value) {
         throw std::length_error("FixedCapacityVector: Attempt to copy from a "
                                 "vector with more elements than capacity");
       }
@@ -268,14 +268,14 @@ public:
     return *this;
   }
 
-  template <SizeType OtherCapacity>
-    requires(OtherCapacity != Capacity)
+  template <SizeType other_capacity>
+    requires(other_capacity != capacity_value)
   constexpr FixedCapacityVector &
-  operator=(FixedCapacityVector<T, OtherCapacity> &&other) noexcept(
-      (OtherCapacity < Capacity) &&
+  operator=(FixedCapacityVector<T, other_capacity> &&other) noexcept(
+      (other_capacity < capacity_value) &&
       std::is_nothrow_move_constructible_v<ValueType>) {
-    if constexpr (OtherCapacity > Capacity) {
-      if (other.m_size > Capacity) {
+    if constexpr (other_capacity > capacity_value) {
+      if (other.m_size > capacity_value) {
         throw std::length_error(
             "FixedCapacityVector: Attempt to move-assign from a "
             "vector with more elements than capacity");
@@ -319,7 +319,7 @@ public:
    * @return The capacity of the vector.
    */
   [[nodiscard]] constexpr SizeType capacity() const noexcept {
-    return Capacity;
+    return capacity_value;
   }
 
   /**
@@ -333,7 +333,7 @@ public:
    * @return true if the vector has reached its capacity, false otherwise.
    */
   [[nodiscard]] constexpr bool full() const noexcept {
-    return m_size == Capacity;
+    return m_size == capacity_value;
   }
 
   /**
