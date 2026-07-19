@@ -1,0 +1,28 @@
+---
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
+      - name: Setup vcpkg
+        env:
+          VCPKG_FORCE_SYSTEM_BINARIES: 1
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git ${{ runner.temp }}/vcpkg
+          ${{ runner.temp }}/vcpkg/bootstrap-vcpkg.sh
+      - name: Configure CMake
+        env:
+          VCPKG_ROOT: ${{ runner.temp }}/vcpkg
+        run: |
+          cmake -S . -B build --preset Clang-Debug
+      - name: Build
+        run: cmake --build build
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
