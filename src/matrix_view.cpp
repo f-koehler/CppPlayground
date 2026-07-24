@@ -168,6 +168,14 @@ public:
     return StridedMatrixView(m_data, m_cols, m_rows, m_col_stride,
                              m_row_stride);
   }
+  [[nodiscard]] constexpr StridedMatrixView stride(std::size_t row_step, std::size_t col_step) {
+      if(row_step ==0 || col_step ==0) {
+          throw std::invalid_argument("Row & col step must be positive");
+      }
+      auto new_rows = (m_rows + row_step - 1) / row_step; // ceil div
+      auto new_cols = (m_cols + col_step - 1) / col_step; // ceil div
+      return StridedMatrixView(m_data, new_rows, new_cols, m_row_stride * row_step, m_col_stride * col_step);
+  }
 
 private:
   T *m_data;
