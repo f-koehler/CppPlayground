@@ -10,3 +10,5 @@ target_link_libraries(thread_racer PRIVATE CLI11::CLI11 spdlog::spdlog)
 
 add_executable(matrix_view matrix_view.cpp)
 set_property(TARGET matrix_view PROPERTY CXX_STANDARD 26)
+
+add_executable(interference_size interference_size.cpp)
