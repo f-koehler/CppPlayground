@@ -12,3 +12,5 @@ add_executable(matrix_view matrix_view.cpp)
 set_property(TARGET matrix_view PROPERTY CXX_STANDARD 26)
 
 add_executable(interference_size interference_size.cpp)
+
+add_executable(coroutines_fibonacci coroutines_fibonacci.cpp)
