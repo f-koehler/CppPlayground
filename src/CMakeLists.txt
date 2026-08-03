@@ -1,3 +1,5 @@
+add_subdirectory(signal_handling)
+
 add_executable(allocation_sizes allocation_sizes.cpp)
 add_executable(crtp crtp.cpp)
 add_executable(crtp_cpp23 crtp.cpp)
