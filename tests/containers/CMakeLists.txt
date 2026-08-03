@@ -1,1 +1,1 @@
-target_sources(tests PRIVATE test_fixed_capacity_vector.cpp test_lru_cache.cpp)
+target_sources(tests PRIVATE test_fixed_capacity_vector.cpp test_lru_cache.cpp test_fixed_capacity_queue.cpp)
