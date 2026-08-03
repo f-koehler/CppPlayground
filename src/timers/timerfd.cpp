@@ -10,6 +10,8 @@ extern "C" {
 }
 
 int main() {
+  static constexpr long microseconds_per_second = 1'000'000L;
+
   // create timerfd
   int tfd = timerfd_create(CLOCK_MONOTONIC, 0);
   if (tfd == -1) {
@@ -40,7 +42,7 @@ int main() {
                  std::chrono::duration_cast<std::chrono::microseconds>(
                      now.time_since_epoch())
                          .count() %
-                     1'000'000,
+                     microseconds_per_second,
                  num_expirations);
   }
 

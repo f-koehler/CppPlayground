@@ -15,7 +15,8 @@ int main() {
   sigemptyset(&mask);
   sigaddset(&mask, SIGINT);
 
-  // block default signal handling
+  // block default signal handling, method not thread-safe
+  // NOLINTNEXTLINE(concurrency-mt-unsafe)
   if (sigprocmask(SIG_BLOCK, &mask, nullptr) == -1) {
     perror("sigprocmask");
     return 1;
